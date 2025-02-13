@@ -1,0 +1,38 @@
+[build-system]
+requires = [
+    "setuptools>=61.0",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ccbhc_measurements"
+description = "An easy way to calculate CCBHC measurements."
+version = "0.0.4"
+readme = "README.md"
+authors = [
+    { name = "Pesach Tikvah Doors of Hope Data Analytics", email = "agursky@pesachtikvah.org" }
+]
+# license = {file = 'LICENSE'}
+requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.2.2",
+    "python-dateutil>=2.8.2",
+    "tzdata>=2022.7"
+]
+
+classifiers = [
+    # "License :: OSI Approved :: Your License Here",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.12",
+]
+
+[tool.setuptools.packages.find]
+include = ["ccbhc_measurements", "ccbhc_measurements.*"]
+namespaces = false
+
+#[project.urls]
+# "Homepage" = "github.com"
+# "Documentaion" = "github.com"
+# "Repository" = "github.com"
