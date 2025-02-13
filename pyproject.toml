@@ -8,16 +8,16 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ccbhc_measurements"
 description = "An easy way to calculate CCBHC measurements."
-version = "0.0.4"
+version = "0.0.6"
 readme = "README.md"
 authors = [
-    { name = "Pesach Tikvah Doors of Hope - Data Analytics", email = "agursky@pesachtikvah.org" }
+    { name = "Pesach Tikvah Hope Development Inc.", email = "agursky@pesachtikvah.org" }
 ]
 maintainers = [
     { name = "Alex Gusrky", email = "agursky@pesachtikvah.org" },
     { name = "Yisroel Len", email = "ylen@pesachtikvah.org" }
 ]
-# license = {file = 'LICENSE'}
+license = {file = 'LICENSE'}
 requires-python = ">=3.10"
 dependencies = [
     "pandas>=2.2.2",

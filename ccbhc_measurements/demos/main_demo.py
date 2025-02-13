@@ -8,3 +8,4 @@ for measure in measurements:
     for key,val in results.items():
         print(key)
         print(val)
+        val.to_excel(key+".xlsx", index=False)
