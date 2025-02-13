@@ -22,8 +22,8 @@ setuptools.setup(
         # "License :: ",
         "Programming Language :: Python :: 3.12"
     ],
-    python_requires=">=3.12",
-    install_requires=["pandas>=2.2.2"],
+    python_requires=">=3.10",
+    install_requires=["pandas>=2.2.2","tzdata>=2022.7"],
     packages=setuptools.find_packages(),
     include_package_data=True
 )
