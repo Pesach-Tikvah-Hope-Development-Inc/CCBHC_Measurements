@@ -15,3 +15,6 @@
 
 # Ignore ccbhc_measurements.egg-info folder
 **/ccbhc_measurements.egg-info/
+
+# Ignore dist folder
+**/dist/
