@@ -8,24 +8,24 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ccbhc_measurements"
 description = "An easy way to calculate CCBHC measurements."
-version = "0.0.6"
+version = "2025.2.15"
 readme = "README.md"
 authors = [
     { name = "Pesach Tikvah Hope Development Inc.", email = "agursky@pesachtikvah.org" }
 ]
 maintainers = [
-    { name = "Alex Gusrky", email = "agursky@pesachtikvah.org" },
+    { name = "Alex Gursky", email = "agursky@pesachtikvah.org" },
     { name = "Yisroel Len", email = "ylen@pesachtikvah.org" }
 ]
 license = {file = 'LICENSE'}
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "pandas>=2.2.2",
     "python-dateutil>=2.8.2",
     "tzdata>=2022.7"
 ]
 classifiers = [
-    # "License :: OSI Approved :: Your License Here",
+    "License :: Free for non-commercial use",
     "Intended Audience :: Healthcare Industry",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3.12",
@@ -36,7 +36,6 @@ classifiers = [
 include = ["ccbhc_measurements", "ccbhc_measurements.*"]
 namespaces = false
 
-#[project.urls]
-# "Homepage" = "github.com"
-# "Documentaion" = "github.com"
-# "Repository" = "github.com"
+[project.urls]
+"Documentaion" = "https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements"
+"Repository" = "https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements"

@@ -26,9 +26,9 @@ Our code is simple:
  - **DEP REM 6 -** Depression Remission at Six Months - [Dep Rem 6 Required Data Input and Output Diagram][Dep Rem 6 Diagram]
 
 The definition for these Measurements can be at <https://www.samhsa.gov/sites/default/files/ccbhc-quality-measures-technical-specifications-manual.pdf>  
-At the moment we only have these Measurements, but more will be added in the future
+At the moment we only have these Measurements, but more will be added in the future. Check out the [Contributions and Discussions](#contributions-and-discussions) section.
 
-[Dep Rem 6 Diagram]:ccbhc_measurements/diagrams/DEP%20REM%20Input-Output%20Example.pdf
+[Dep Rem 6 Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/DEP%20REM%20Input-Output%20Example.pdf
 
 ## Code Demonstration
 
@@ -80,12 +80,15 @@ for name, data in results.items():
 
 ## Installation
 
+The source code is currently hosted on GitHub at:
+https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements
+
 Binary installers for the latest released version are available at the [Python
-Package Index (PyPI)](https://test.pypi.org/project/ccbhc-measurements/)
+Package Index (PyPI)](https://pypi.org/project/ccbhc-measurements/)
 
 ```sh
 # PyPI
-pip install -i https://test.pypi.org/simple/ ccbhc-measurements
+pip install ccbhc-measurements
 ```
 
 ## Contributors
@@ -96,9 +99,10 @@ pip install -i https://test.pypi.org/simple/ ccbhc-measurements
 ## Contributions and Discussions
 
 Feel free to add and create you own ```Measurements```. All ```Measurements``` should follow [this uml][uml].
+
 Send us your recomendations, bugs, questions or feedback at [agursky@pesachtikvah.com](mailto:agursky@pesachtikvah.com)
 
-[uml]:ccbhc_measurements/diagrams/Measurements%20UML.pdf
+[uml]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/Measurements%20UML.pdf
 
 <hr>
 
