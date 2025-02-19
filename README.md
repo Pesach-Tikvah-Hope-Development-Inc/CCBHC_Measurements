@@ -30,7 +30,7 @@ The definition for these Measurements can be found at <https://www.samhsa.gov/si
 
 At the moment we only have these Measurements, but we plan on releasing a new Measurement every two weeks.
 
-[Dep Rem 6 Diagram]:ccbhc_measurements/diagrams/DEP%20REM%20Input-Output%20Example.pdf
+[Dep Rem 6 Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/DEP%20REM%20Input-Output%20Example.pdf
 
 ## Code Demonstration
 
@@ -98,7 +98,7 @@ pip install ccbhc_measurements
 Feel free to add and create you own ```Measurements```. All ```Measurements``` should follow [this uml][uml].
 Send us your recomendations, bugs, questions or feedback at [agursky@pesachtikvah.com](mailto:agursky@pesachtikvah.com)
 
-[uml]:ccbhc_measurements/diagrams/Measurements%20UML.pdf
+[uml]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/Measurements%20UML.pdf
 
 <hr>
 
