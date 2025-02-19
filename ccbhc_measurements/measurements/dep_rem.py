@@ -201,13 +201,16 @@ class _Sub_1(Submeasure):
                 numerator description
         """
         index_group = self.__populace__[self.__populace__['patient_id'] == iv['patient_id']].copy()
-        index_group = index_group[(index_group['encounter_datetime'].dt.date >= iv['earliest_remission']) & (index_group['encounter_datetime'].dt.date <= (iv['latest_remission']))]
-        has_remission = len(index_group[index_group['total_score'] < 5]) >= 1
+        remission_group = index_group[(index_group['encounter_datetime'].dt.date >= iv['earliest_remission']) & (index_group['encounter_datetime'].dt.date <= (iv['latest_remission']))]
+        has_remission = len(remission_group[remission_group['total_score'] < 5]) >= 1
         if has_remission:
             reason = "Has Remission"
-        elif index_group.empty: # all encounters were filtered out because of the early/late remission date
-            reason = "Remission Time Period not Reached"
-        else: # had encounters durring the remission period but didn't have a score < 5
+        elif remission_group.empty: # the df could be empty b/c eiter the date filter OR nothing was given after the earliest remission date
+            if datetime.now().date() < iv['earliest_remission']:
+                reason = "Remission Period not Reached"
+            else:
+                reason = "No PHQ-9 Follow Up"
+        else: # must have given a follow up, but scored too high
             reason = "No Remission"
         return has_remission,reason
 
