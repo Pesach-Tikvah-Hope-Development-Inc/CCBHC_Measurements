@@ -90,8 +90,8 @@ pip install ccbhc_measurements
 
 ## Contributors
 
- - Alex Gursky
- - Yisroel Len
+ - Alex Gursky - Data Engineer
+ - Yisroel Len - Director of Data Analytics & CCBHC Project Evaluator
 
 ## Contributions and Discussions
 
