@@ -5,7 +5,6 @@ import pandas as pd
 from ccbhc_measurements.abstractions.submeasure import Submeasure
 from ccbhc_measurements.abstractions.measurement import Measurement
 
-
 class _Sub_1(Submeasure):
     """
     The Percentage of clients (12 years of age or older)
@@ -181,16 +180,36 @@ class _Sub_1(Submeasure):
         range = relativedelta(days=60)
         self.__index_visits__['earliest_remission'] = self.__index_visits__['encounter_datetime'].dt.date + frequency - range
         self.__index_visits__['latest_remission'] = self.__index_visits__['encounter_datetime'].dt.date + frequency + range
-        self.__index_visits__['numerator'] = self.__index_visits__.apply(self.__remission_check,axis=1)
+        self.__index_visits__[['numerator','numerator_reason']] = self.__index_visits__.apply(lambda row:(pd.Series(self.__remission_check(row))),axis=1)
         self.__overwrite_populace()
 
-    def __remission_check(self,iv) -> bool:
+    def __remission_check(self,iv:pd.Series) -> tuple[bool,str]:
         """
         Checks if a remission occured within the remmission period for all index visits
+
+        Parameters
+        ----------
+        index_visit
+            Patient's index visit
+
+        Returns
+        -------
+        tuple[bool,str]
+            bool
+                numerator value
+            str
+                numerator description
         """
         index_group = self.__populace__[self.__populace__['patient_id'] == iv['patient_id']].copy()
         index_group = index_group[(index_group['encounter_datetime'].dt.date >= iv['earliest_remission']) & (index_group['encounter_datetime'].dt.date <= (iv['latest_remission']))]
-        return len(index_group[index_group['total_score'] < 5]) >= 1
+        has_remission = len(index_group[index_group['total_score'] < 5]) >= 1
+        if has_remission:
+            reason = "Has Remission"
+        elif index_group.empty: # all encounters were filtered out because of the early/late remission date
+            reason = "No Remission Period"
+        else:
+            reason = "No Remission"
+        return has_remission,reason
 
     def __overwrite_populace(self) -> None:
         """
@@ -341,7 +360,7 @@ class _Sub_1(Submeasure):
         """
         Removes all data that isn't needed to calculate the Submeasure's populace
         """
-        self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','encounter_id','numerator']].drop_duplicates() 
+        self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','encounter_id','numerator','numerator_reason']].drop_duplicates() 
 
     @override
     def _trim_unnecessary_stratification_data(self) -> None:
