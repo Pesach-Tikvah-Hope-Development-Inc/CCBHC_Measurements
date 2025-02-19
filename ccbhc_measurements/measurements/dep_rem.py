@@ -30,7 +30,7 @@ class _Sub_1(Submeasure):
     @override
     def _set_populace(self) -> None:
         """
-        Gets all possible eligible clients for the denominator
+        Sets all possible eligible clients for the denominator
         """
         self.__initilize_populace()
         self.__set_index_visits()
@@ -206,8 +206,8 @@ class _Sub_1(Submeasure):
         if has_remission:
             reason = "Has Remission"
         elif index_group.empty: # all encounters were filtered out because of the early/late remission date
-            reason = "No Remission Period"
-        else:
+            reason = "Remission Time Period not Reached"
+        else: # had encounters durring the remission period but didn't have a score < 5
             reason = "No Remission"
         return has_remission,reason
 

@@ -13,22 +13,24 @@
 
 ## Purpose
 
-All CCBHCs are required to report Quality Measurements. The goal of this package is to simplify the process for calculating CCBHC measurements for all CCBHCs.
+The goal of this package is to simplify the process for calculating CCBHC measurements for all CCBHCs. Here's how it works, using the DEP-REM-6 as an example:
+![simple example of how the package works](https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/Simple%20CCBHC_Measurements%20Example.png?raw=true)
+[Click here for the more detailed DEP-REM-6 example pdf][Dep Rem 6 Diagram]
 
 Our code is simple:
 1. Import the Measurement you want to calculate.
 2. Give it the required data (downloaded excel reports from your EHR, query data from SQL, or whatever)
 3. Run ```get_all_submeasures()```. Under the hood, ```get_all_submeasures()``` determines which data meets the Measurments criteria and which does not.
 4. Export your data to your preferred tool for analysis. If you want to keep it in pandas, you already have it. If you want to use Excel, or Power BI, you can export it there as well!
-
 ## Currently Supported Measurements
 
- - **DEP REM 6 -** Depression Remission at Six Months - [Dep Rem 6 Required Data Input and Output Diagram][Dep Rem 6 Diagram]
+ - **DEP REM 6 -** Depression Remission at Six Months - [DEP-REM-6 Detailed Data Input and Output Diagram][Dep Rem 6 Diagram]
 
-The definition for these Measurements can be at <https://www.samhsa.gov/sites/default/files/ccbhc-quality-measures-technical-specifications-manual.pdf>  
-At the moment we only have these Measurements, but more will be added in the future. Check out the [Contributions and Discussions](#contributions-and-discussions) section.
+The definition for these Measurements can be found at <https://www.samhsa.gov/sites/default/files/ccbhc-quality-measures-technical-specifications-manual.pdf>  
 
-[Dep Rem 6 Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/DEP%20REM%20Input-Output%20Example.pdf
+At the moment we only have these Measurements, but we plan on releasing a new Measurement every two weeks.
+
+[Dep Rem 6 Diagram]:ccbhc_measurements/diagrams/DEP%20REM%20Input-Output%20Example.pdf
 
 ## Code Demonstration
 
@@ -71,8 +73,6 @@ for name, data in results.items():
 ## De-panda-cies
 
  - [pandas - Powerful data structures for data analysis, time series, and statistics](https://pandas.pydata.org/)
- - [python-dateutil - Extensions to the standard Python datetime module](https://dateutil.readthedocs.io/en/stable/index.html)
- - [pytz - Brings the Olson tz database into Python which allows accurate and cross platform timezone calculations](https://github.com/stub42/pytz)
 
 ## License
 
@@ -80,15 +80,12 @@ for name, data in results.items():
 
 ## Installation
 
-The source code is currently hosted on GitHub at:
-https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements
-
 Binary installers for the latest released version are available at the [Python
-Package Index (PyPI)](https://pypi.org/project/ccbhc-measurements/)
+Package Index (PyPI)](https://test.pypi.org/project/ccbhc-measurements/)
 
 ```sh
 # PyPI
-pip install ccbhc-measurements
+pip install ccbhc_measurements
 ```
 
 ## Contributors
@@ -99,10 +96,9 @@ pip install ccbhc-measurements
 ## Contributions and Discussions
 
 Feel free to add and create you own ```Measurements```. All ```Measurements``` should follow [this uml][uml].
-
 Send us your recomendations, bugs, questions or feedback at [agursky@pesachtikvah.com](mailto:agursky@pesachtikvah.com)
 
-[uml]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/Measurements%20UML.pdf
+[uml]:ccbhc_measurements/diagrams/Measurements%20UML.pdf
 
 <hr>
 
