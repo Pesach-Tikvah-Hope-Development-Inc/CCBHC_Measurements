@@ -383,7 +383,7 @@ class _Sub_1(Submeasure):
         """
         Removes all data that isn't needed to calculate the Submeasure's stratification 
         """
-        self.__stratification__ = self.__stratification__[['patient_measurement_year_id','age','ethnicity','race','medicaid']].drop_duplicates()
+        self.__stratification__ = self.__stratification__[['patient_id','ethnicity','race']].drop_duplicates()
 
     @override
     def _sort_final_data(self) -> None:
