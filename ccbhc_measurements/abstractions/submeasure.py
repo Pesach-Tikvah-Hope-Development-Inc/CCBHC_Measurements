@@ -200,21 +200,21 @@ class Submeasure(Denominator,Numerator,Stratification):
                 Submeasure data
         """
         try:
-            self._trim_unnecessary_populace_data()
+            self._set_final_denominator_data()
             self._trim_unnecessary_stratification_data()
             self._sort_final_data()
             return {
-            self.get_name() : self.__populace__.copy(),
-            self.get_name() + '_stratification' : self.__stratification__.copy()
+                self.get_name() : self.__populace__.copy(),
+                self.get_name() + '_stratification' : self.__stratification__.copy()
             }
         except Exception:
             self.__LOGGER__.error("Failed to Get Final Data",exc_info=True)
             raise
 
     @abstractmethod
-    def _trim_unnecessary_populace_data(self) -> None:
+    def _set_final_denominator_data(self) -> None:
         """
-        Removes all data that isn't needed to calculate the Submeasure's populace
+        Sets all data that is needed and unique to the Submeasure's denominator populace
 
         This method must be implemented by the concrete class 
         to define how the populace data is trimmed

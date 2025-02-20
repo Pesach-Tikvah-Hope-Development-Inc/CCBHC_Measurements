@@ -359,11 +359,24 @@ class _Sub_1(Submeasure):
         self.__stratification__ = self.__stratification__.fillna('Unknown')
 
     @override
-    def _trim_unnecessary_populace_data(self) -> None:
+    def _set_final_denominator_data(self) -> None:
         """
-        Removes all data that isn't needed to calculate the Submeasure's populace
+        Sets the populace data to the unique data points that are needed for the denominator
         """
-        self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','encounter_id','numerator','numerator_reason']].drop_duplicates() 
+        self.__remove_unneeded_populace_columns()
+        self.__add_in_stratification_columns()
+
+    def __remove_unneeded_populace_columns(self) -> None:
+        """
+        Removes all columns that were used to calculate data points 
+        """
+        self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','encounter_id','numerator','numerator_reason']].drop_duplicates()
+
+    def __add_in_stratification_columns(self) -> None:
+        """
+        Merges in stratification columns that are unique to the measurement year
+        """
+        self.__populace__ = pd.merge(self.__populace__,self.__stratification__[['patient_measurement_year_id','age','medicaid']])
 
     @override
     def _trim_unnecessary_stratification_data(self) -> None:
