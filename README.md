@@ -14,14 +14,22 @@
 ## Purpose
 
 The goal of this package is to simplify the process for calculating CCBHC measurements for all CCBHCs. It does this by taking in all the relevant data for a measurement and outputing whether the data meets the measurements' criteria. Here's the DEP-REM-6 as an example:
+
 ![simple example of how the package works](https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/Simple%20CCBHC_Measurements%20Example.png?raw=true)
 [Click here for the more detailed DEP-REM-6 example pdf][Dep Rem 6 Diagram]
 
+### 1. Data Processing
 Our code is simple:
 1. Import the Measurement you want to calculate.
 2. Give it the required data (downloaded excel reports from your EHR, query data from SQL, or whatever)
 3. Run ```get_all_submeasures()```. Under the hood, ```get_all_submeasures()``` determines which data meets the Measurments criteria and which does not.
 4. Export your data to your preferred tool for analysis. If you want to keep it in pandas, you already have it. If you want to use Excel, or Power BI, you can export it there as well!
+
+### 2. Dashboard Display
+We've also created a base Power BI file as a foundation for a dashboard. [Check out the dashboard folder here.](CCBHC_Measurements/ccbhc_measurements/dashboard/)
+
+![Dashboard Picture](ccbhc_measurements/diagrams/Dashboard_Example.jpg)
+
 ## Currently Supported Measurements
 
  - **DEP REM 6 -** Depression Remission at Six Months - [DEP-REM-6 Detailed Data Input and Output Diagram][Dep Rem 6 Diagram]
@@ -69,7 +77,7 @@ results = measure.get_all_submeasures()s
 for name, data in results.items():
     data.to_excel(name+".xlsx", index=False)
 ```
-### Example Data Output:
+##### Example Data Output:
 
 | patient_id | patient_measurement_year_id | encounter_id | age | medicaid | numerator | numerator_reason            |
 | ---------- | --------------------------- | ------------ | --- | -------- | --------- | ---------------------------- |
@@ -77,6 +85,9 @@ for name, data in results.items():
 | 2          | 1-2025                      | 3            | 18+ | FALSE    | **FALSE**     | <mark>**Remission Period not Reached**</mark> |
 | 3          | 3-2024                      | 4            | 18+ | FALSE    | **FALSE**     | <mark>**No PHQ-9 Follow Up**</mark>           |
 | 4          | 4-2024                      | 5            | 18+ | FALSE    | **FALSE**     | <mark>**No Remission**</mark>                 |
+
+#### - Step 4: Create a Dashboard in Power BI (Optional)
+We've created an example dashboard in Power BI for easy implementation but feel free to use the analysis tool of your choice. Feel free to download it from [the dashboard folder](CCBHC_Measurements/ccbhc_measurements/dashboard/).
 
 ## De-panda-cies
 
