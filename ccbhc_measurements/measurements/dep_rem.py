@@ -391,7 +391,7 @@ class _Sub_1(Submeasure):
         Sorts the Populace and Stratification dataframes
         """
         self.__populace__ = self.__populace__.sort_values('patient_measurement_year_id')
-        self.__stratification__ = self.__stratification__.sort_values('patient_measurement_year_id')
+        self.__stratification__ = self.__stratification__.sort_values('patient_id')
 
 class Dep_Rem(Measurement):
     """

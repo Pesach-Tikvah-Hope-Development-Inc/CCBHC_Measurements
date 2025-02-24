@@ -13,7 +13,7 @@
 
 ## Purpose
 
-The goal of this package is to simplify the process for calculating CCBHC measurements for all CCBHCs. Here's how it works, using the DEP-REM-6 as an example:
+The goal of this package is to simplify the process for calculating CCBHC measurements for all CCBHCs. It does this by taking in all the relevant data for a measurement and outputing whether the data meets the measurements' criteria. Here's the DEP-REM-6 as an example:
 ![simple example of how the package works](https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/Simple%20CCBHC_Measurements%20Example.png?raw=true)
 [Click here for the more detailed DEP-REM-6 example pdf][Dep Rem 6 Diagram]
 
@@ -69,6 +69,14 @@ results = measure.get_all_submeasures()s
 for name, data in results.items():
     data.to_excel(name+".xlsx", index=False)
 ```
+### Example Data Output:
+
+| patient_id | patient_measurement_year_id | encounter_id | age | medicaid | numerator | numerator_reason            |
+| ---------- | --------------------------- | ------------ | --- | -------- | --------- | ---------------------------- |
+| 1          | 1-2024                      | 1            | 18+ | FALSE    | **TRUE**      | <mark>**Has Remission**</mark>                |
+| 2          | 1-2025                      | 3            | 18+ | FALSE    | **FALSE**     | <mark>**Remission Period not Reached**</mark> |
+| 3          | 3-2024                      | 4            | 18+ | FALSE    | **FALSE**     | <mark>**No PHQ-9 Follow Up**</mark>           |
+| 4          | 4-2024                      | 5            | 18+ | FALSE    | **FALSE**     | <mark>**No Remission**</mark>                 |
 
 ## De-panda-cies
 
