@@ -392,14 +392,27 @@ class _Sub_1 (Submeasure):
         """
         Sets the populace data to the unique data points that are needed for the denominator
         """
+        self.__remove_unneeded_populace_columns()
+        self.__add_in_stratification_columns()
+
+    def __remove_unneeded_populace_columns(self) -> None:
+        """
+        Removes all columns that were used to calculate data points 
+        """
         self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','encounter_id','numerator']].drop_duplicates() 
+
+    def __add_in_stratification_columns(self) -> None:
+        """
+        Merges in stratification columns that are unique to the measurement year
+        """
+        self.__populace__ = pd.merge(self.__populace__,self.__stratification__[['patient_measurement_year_id','medicaid']])
 
     @override
     def _trim_unnecessary_stratification_data(self) -> None:
         """
         Removes all data that isn't needed to calculate the Submeasure's stratification 
         """
-        self.__stratification__ = self.__stratification__[['patient_measurement_year_id','ethnicity','race','medicaid']].drop_duplicates()
+        self.__stratification__ = self.__stratification__[['patient_id','ethnicity','race']].drop_duplicates()
 
     @override
     def _sort_final_data(self) -> None:
@@ -407,7 +420,7 @@ class _Sub_1 (Submeasure):
         Sorts the Populace and Stratification dataframes
         """
         self.__populace__ = self.__populace__.sort_values('patient_measurement_year_id')
-        self.__stratification__ = self.__stratification__.sort_values('patient_measurement_year_id')
+        self.__stratification__ = self.__stratification__.sort_values('patient_id')
 
 
 
@@ -475,10 +488,9 @@ class ASC(Measurement):
     >>> }
     """
 
-    def __init__(self,sub1_data:list[pd.DataFrame] = None, sub2_data:list[pd.DataFrame] = None):
+    def __init__(self,sub1_data:list[pd.DataFrame] = None):
         super().__init__("ASC")
         self.__sub1__: Submeasure = _Sub_1(self.get_name() + "_sub_1",sub1_data)
-        # self.__sub2__: Submeasure = _Sub_2(self.get_name() + "_sub_2",sub2_data)
 
     @override
     def get_all_submeasures(self) -> dict[str,pd.DataFrame]:
