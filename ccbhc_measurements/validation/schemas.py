@@ -10,6 +10,23 @@ Diagnostic_History = {
     "encounter_datetime": ("datetime64[ns]",),
     "diagnosis": (str, 'object')
 }
+Regular_Visits = {
+    "patient_id": (str, 'object'),
+    "patient_DOB": ("datetime64[ns]",),
+    "encounter_id": (str, 'object'),
+    "encounter_datetime": ("datetime64[ns]",)
+}
+Preventive_Visits = {
+    "patient_id": (str, 'object'),
+    "patient_DOB": ("datetime64[ns]",),
+    "encounter_id": (str, 'object'),
+    "encounter_datetime": ("datetime64[ns]",),
+    "cpt_code": (str, 'object')
+}
+Screenings = {
+    "patient_id": (str, 'object'),
+    "screening_datetime": ("datetime64[ns]",)
+}
 Demographic_Data = {
     "patient_id": (str, 'object'),
     "race": (str, 'object'),
@@ -48,3 +65,9 @@ def get_schema(df_name:str) -> dict[str:type]:
             return Diagnostic_History
         case "Insurance_History":
             return Insurance_History
+        case "Regular_Visits":
+            return Regular_Visits
+        case "Preventive_Visits":
+            return Preventive_Visits
+        case "Screenings":
+            return Screenings
