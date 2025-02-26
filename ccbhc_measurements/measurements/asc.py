@@ -277,7 +277,6 @@ class _Sub_1 (Submeasure):
         """
         self.__set_insurance_data()
         
-
     def __set_patient_demographics(self) -> None:
         """
         Merges DEMOGRAPHICS into stratification
@@ -289,10 +288,11 @@ class _Sub_1 (Submeasure):
         Sets insurance stratification at the time of the index visit
         """
         medicaid_data = self.__INSURANCE__.merge(self.__stratification__[['patient_id','encounter_datetime']], how='right')
-        medicaid_data = self.__filter_insurance_dates(medicaid_data)
+        medicaid_data = self.__filter_insurance_dates(medicaid_data) # gets insurances at time of encounter, "losing" patients
         medicaid_data['patient_measurement_year_id'] = self.__create_patient_measurement_year_id(medicaid_data['patient_id'],medicaid_data['encounter_datetime'])
         results = self.__determine_medicaid_stratify(medicaid_data)
         self.__stratification__ = self.__stratification__.merge(results,how='left')
+        self.__stratification__['medicaid'] = self.__stratification__['medicaid'].fillna(False) # replace all the "lost" patients from above without insurance
 
     def __filter_insurance_dates(self,medicaid_data:pd.DataFrame) -> pd.DataFrame:
         """
@@ -421,7 +421,6 @@ class _Sub_1 (Submeasure):
         """
         self.__populace__ = self.__populace__.sort_values('patient_measurement_year_id')
         self.__stratification__ = self.__stratification__.sort_values('patient_id')
-
 
 
 class ASC(Measurement):
