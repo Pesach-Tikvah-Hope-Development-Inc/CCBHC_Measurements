@@ -102,7 +102,7 @@ class Submeasure(Denominator,Numerator,Stratification):
             self.__LOGGER__.error("Failed to Validate",exc_info=True)
 
     @abstractmethod
-    def _set_dataframes(dataframes:list[pd.DataFrame]) -> None:
+    def _set_dataframes(self, dataframes:list[pd.DataFrame]) -> None:
         """
         Sets private attributes to the validated dataframes that get used to calculate the submeasure
 
