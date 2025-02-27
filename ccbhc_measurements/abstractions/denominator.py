@@ -9,7 +9,7 @@ class Denominator(ABC):
     """
 
     @abstractmethod
-    def _set_populace(self):
+    def _set_populace(self) -> None:
         """
         Sets the initial population for the denominator
 
@@ -19,7 +19,7 @@ class Denominator(ABC):
         pass
 
     @abstractmethod
-    def _remove_exclusions(self):
+    def _remove_exclusions(self) -> None:
         """
         Removes any exclusions from the population
 

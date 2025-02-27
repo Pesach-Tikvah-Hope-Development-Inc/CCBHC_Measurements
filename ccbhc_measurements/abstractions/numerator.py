@@ -9,7 +9,7 @@ class Numerator(ABC):
     """
 
     @abstractmethod
-    def _find_performance_met(self):
+    def _find_performance_met(self) -> None:
         """
         Checks the denominator populace based on numerator performance criteria
 
@@ -20,7 +20,7 @@ class Numerator(ABC):
         pass
 
     @abstractmethod
-    def _apply_time_constraint(self):
+    def _apply_time_constraint(self) -> None:
         """
         Applies time constraints to the denominator populace
 
