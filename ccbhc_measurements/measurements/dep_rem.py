@@ -235,7 +235,7 @@ class _Sub_1(Submeasure):
         self.__set_patient_demographics()
         
     @override
-    def _set_encounter_stratification(self):
+    def _set_encounter_stratification(self) -> None:
         """
         Sets stratification data that is encounter dependant
         """
