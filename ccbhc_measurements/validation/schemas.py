@@ -23,9 +23,13 @@ Preventive_Visits = {
     "encounter_datetime": ("datetime64[ns]",),
     "cpt_code": (str, 'object')
 }
-Screenings = {
+Alcohol_Screenings = {
     "patient_id": (str, 'object'),
     "screening_datetime": ("datetime64[ns]",)
+}
+Brief_Counselings = {
+    "patient_id": (str, 'object'),
+    "encounter_id": (str, 'object')
 }
 Demographic_Data = {
     "patient_id": (str, 'object'),
@@ -69,5 +73,7 @@ def get_schema(df_name:str) -> dict[str:type]:
             return Regular_Visits
         case "Preventive_Visits":
             return Preventive_Visits
-        case "Screenings":
-            return Screenings
+        case "Alcohol_Screenings":
+            return Alcohol_Screenings
+        case "Brief_Counselings":
+            return Brief_Counselings

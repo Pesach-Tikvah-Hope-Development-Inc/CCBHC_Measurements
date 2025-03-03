@@ -5,7 +5,7 @@ import pandas as pd
 from ccbhc_measurements.abstractions.submeasure import Submeasure
 from ccbhc_measurements.abstractions.measurement import Measurement
 
-class _Sub_1 (Submeasure):
+class _Sub_1(Submeasure):
     """
     Percentage of clients aged 18 years and older who were screened for unhealthy alcohol use
     using a Systematic Screening Method at least once within the last 12 months
@@ -423,6 +423,181 @@ class _Sub_1 (Submeasure):
         self.__stratification__ = self.__stratification__.sort_values('patient_id')
 
 
+class _Sub_2(Submeasure):
+    """
+    Percentage of clients who were identified as unhealthy alcohol users and who recieved brief counseling
+    """
+
+    @override
+    def get_submeasure_data(self) -> dict[pd.DataFrame:pd.DataFrame]:
+        """
+        Calls all functions of the submeasure
+
+        Returns
+        -------
+        dict[pd.DataFrame:pd.DataFrame]
+            pd.Dataframe
+                Calculated populace data
+            pd.Dataframe
+                Calculated stratified data
+        
+        Raises
+        ------
+        AttributeError
+            When the sub1 data is not set
+        """
+        if not self.__SUB1_SUBSET__:
+            raise AttributeError("ASC Sub 2 is a subset of ASC Sub 1. Do not call ASC.__sub2__.getsubmeasure_data() directly!")
+        else:
+            return super().get_submeasure_data()
+
+    @override
+    def _set_dataframes(self,dataframes:list[pd.DataFrame]) -> None:
+        """
+        Sets private attributes to the validated dataframes that get used to calculate the submeasure
+
+        Paramaters
+        ----------
+        dataframes
+            List of dataframes
+        """
+        self.__DATA__ = dataframes[0].copy()
+
+    def _set_sub1_subset(self,sub1_subset:tuple[pd.DataFrame,pd.DataFrame]) -> None:
+        """
+        Sets the sub1 subset data
+
+        Parameters
+        ----------
+        sub1_subset
+            pd.Dataframe
+                sub1 numerator populace
+            pd.Dataframe
+                sub1 numerator stratification
+        """
+        self.__SUB1_NUMERATOR__ = sub1_subset[0].copy()
+        self.__SUB1_STRATIFY__ = sub1_subset[1].copy()
+        self.__sub1_subset__ = True
+
+    @override
+    def _set_populace(self) -> None:
+        """
+        Sets the initial population for the denominator
+        """
+        self.__populace__ = self.__SUB1_NUMERATOR__.copy()
+
+    @override
+    def _remove_exclusions(self) -> None:
+        """
+        Removes any exclusions from the population
+        """
+        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
+        pass
+
+    @override
+    def _apply_time_constraint(self) -> None:
+        """
+        Applies time constraints to the denominator populace
+        """
+        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
+        pass
+
+    @override
+    def _find_performance_met(self) -> None:
+        """
+        Finds clients who've received brief counseling
+        """
+        counselings = self.__get_counselings()
+        self.__check_counselings(counselings)
+
+    def __get_counselings(self) -> pd.DataFrame:
+        """
+        Returns
+        -------
+        pd.Dataframe
+            brief counselings
+        """
+        return self.__DATA__.copy()
+
+    def __check_counselings(self,counselings) -> None:
+        """
+        Checks if the encounter_id is in the counselings Dataframe
+        """
+        self.__populace__['numerator'] = self.__populace__['encounter_id'].isin(counselings['encounter_id'])
+
+    @override
+    def _set_stratification(self) -> None:
+        """
+        Sets initial population for the stratification
+        """
+        self.__stratification__ = self.__SUB1_STRATIFY__.copy()
+
+    @override
+    def _set_patient_stratification(self) -> None:
+        """
+        Sets stratification data that is patient dependant
+
+        This method must be implemented by the concrete class 
+        to define how the patient stratification is obtained
+        """
+        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
+        pass
+
+    @override
+    def _set_encounter_stratification(self) -> None:
+        """
+        Sets stratification data that is encounter dependant
+
+        This method must be implemented by the concrete class 
+        to define how the encounter stratification is obtained
+        """
+        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
+        pass
+
+    @override
+    def _fill_blank_stratification(self) -> None:
+        """
+        Fills all blank values in the stratification
+
+        This method must be implemented by the concrete class 
+        to define how the blank values are filled
+        """
+        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
+        pass
+
+    @override
+    def _set_final_denominator_data(self) -> None:
+        """
+        Sets all data that is needed and unique to the Submeasure's denominator populace
+
+        This method must be implemented by the concrete class 
+        to define how the populace data is trimmed
+        """
+        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
+        pass
+
+    @override
+    def _trim_unnecessary_stratification_data(self) -> None:
+        """
+        Removes all data that isn't needed for the Submeasure's stratification
+
+        This method must be implemented by the concrete class 
+        to define how the stratification data is trimmed
+        """
+        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
+        pass
+
+    @override
+    def _sort_final_data(self) -> None:
+        """
+        Sorts the Populace and Stratification dataframes
+
+        This method must be implemented by the concrete class 
+        to define how the dataframes is trimmed
+        """
+        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
+        pass
+
 class ASC(Measurement):
     """
     The ASC measure calculates the Percentage of clients aged 18 years and older who were
@@ -441,7 +616,7 @@ class ASC(Measurement):
     >>> ASC_sub_1 = [
     >>> "Regular_Visits",
     >>> "Preventive_Visits",
-    >>> "Screenings",
+    >>> "Alcohol_Screenings",
     >>> "Diagnostic_History",
     >>> "Demographic_Data",
     >>> "Insurance_History"
@@ -462,7 +637,7 @@ class ASC(Measurement):
     >>>     "cpt_code": (str, 'object')
     >>> }
     
-    >>> Screenings = {
+    >>> Alcohol_Screenings = {
     >>>     "patient_id": (str, 'object'),
     >>>     "screening_datetime": ("datetime64[ns]",)
     >>> }
@@ -485,11 +660,16 @@ class ASC(Measurement):
     >>>     "start_datetime": ("datetime64[ns]",),
     >>>     "end_datetime": ("datetime64[ns]",)
     >>> }
+
+    SAMHSA allows for multiple systematic screening methods to be used (AUDIT, AUDIT-C, Single Question Screening),
+    However, this code is currently only able to process AUDIT screenings.
     """
 
-    def __init__(self,sub1_data:list[pd.DataFrame] = None):
+    def __init__(self,sub1_data:list[pd.DataFrame],sub2_data:list[pd.DataFrame] = None):
         super().__init__("ASC")
         self.__sub1__: Submeasure = _Sub_1(self.get_name() + "_sub_1",sub1_data)
+        self.__sub2__: Submeasure = _Sub_2(self.get_name() + "_sub_2",sub2_data)
+        self.__sub2__.__setattr__("__sub1_subset__",False)
 
     @override
     def get_all_submeasures(self) -> dict[str,pd.DataFrame]:
@@ -502,7 +682,81 @@ class ASC(Measurement):
                 - pd.DataFrame: The data corresponding to that submeasure
         """
         try:
-            return self.__sub1__.get_submeasure_data()
+            sub1_results = self.get_sub1_data()
+            sub2_results = self.get_sub2_data()
+            full_results = sub1_results | sub2_results
+            return full_results
         except Exception:
             raise
-    
+        
+    def get_sub1_data(self) -> dict[str,pd.DataFrame]:
+        """
+        Calculates and stores the Submeasure 1 data
+
+        Returns
+        -------
+        dict[str:pd.DataFrame]
+            str
+                Submeasure name
+            pd.DataFrame
+                Submeasure Data
+        """
+        try:
+            sub1_results = self.__sub1__.get_submeasure_data()
+            sub1_subset = self.__get_sub2_subset(sub1_results)
+            self.__sub2__._set_sub1_subset(sub1_subset)
+            return sub1_results
+        except Exception:
+            raise
+        
+    def get_sub2_data(self) -> dict[str,pd.DataFrame]:
+        """
+        Calculates the Submeasure 2 data
+
+        Returns
+        -------
+        dict[str:pd.DataFrame]
+            str
+                Submeasure name
+            pd.DataFrame
+                Submeasure Data
+        """
+        try:
+            if not self.__sub2__.__sub1_subset__:
+                self.get_sub1_data()
+            return self.__sub2__.get_submeasure_data()
+        except Exception:
+            raise
+
+    def __get_sub2_subset(self,sub1_results:dict[str:pd.DataFrame]) -> tuple[pd.DataFrame,pd.DataFrame]:
+        """
+        Filters sub1 populace down to eligible sub2 clients
+
+        Parameters
+        ----------
+        sub1_results
+            str
+                Name
+            pd.Dataframe
+                Data
+        
+        Returns
+        -------
+        tuple
+            pd.Dataframe
+                Populace
+            pd.Dataframe
+                Stratification
+        """
+        # sub 2's populace is a subset of sub 1's numerator,
+        # so all that's needed to do is filter sub 1's results where numerator == True
+        populace = self.__sub1__.get_name()
+        stratification = self.__sub1__.get_name() + '_stratification'
+
+        populace = sub1_results.get(populace)
+        populace = populace[populace['numerator']].copy()
+        populace = populace.drop('numerator',axis=1)
+
+        stratification = sub1_results.get(stratification)
+        stratification = stratification[stratification['patient_id'].isin(populace['patient_id'])].copy()
+        return populace,stratification

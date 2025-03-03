@@ -7,10 +7,13 @@ DEP_REM_sub_1 = [
 ASC_sub_1 = [
     "Regular_Visits",
     "Preventive_Visits",
-    "Screenings",
+    "Alcohol_Screenings",
     "Diagnostic_History",
     "Demographic_Data",
     "Insurance_History"
+]
+ASC_sub_2 = [
+    "Brief_Counselings"
 ]
 
 
@@ -38,5 +41,7 @@ def get_required_dataframes(submeasure_name: str) -> list[str]:
             return DEP_REM_sub_1
         case "ASC_sub_1":
             return ASC_sub_1
+        case "ASC_sub_2":
+            return ASC_sub_2
     raise ValueError(f"Unknown submeasure: {submeasure_name}")
     
