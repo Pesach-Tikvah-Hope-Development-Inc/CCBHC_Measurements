@@ -446,7 +446,7 @@ class _Sub_2(Submeasure):
         AttributeError
             When the sub1 data is not set
         """
-        if not self.__SUB1_SUBSET__:
+        if not self.__sub1_subset__:
             raise AttributeError("ASC Sub 2 is a subset of ASC Sub 1. Do not call ASC.__sub2__.getsubmeasure_data() directly!")
         else:
             return super().get_submeasure_data()
