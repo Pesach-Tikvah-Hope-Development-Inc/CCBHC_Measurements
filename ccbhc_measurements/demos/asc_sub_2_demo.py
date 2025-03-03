@@ -20,5 +20,6 @@ brief_counselings = pd.DataFrame({
     "encounter_id" : numerator_encounters
 })
 brief_counselings.patient_id = brief_counselings.patient_id.astype(str)
+brief_counselings.encounter_id = brief_counselings.encounter_id.astype(str)
 
 data = [brief_counselings]
