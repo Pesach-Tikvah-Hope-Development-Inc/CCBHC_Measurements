@@ -5,13 +5,15 @@ with open("README.md","r") as file:
 
 setuptools.setup(
     name="ccbhc_measurements",
-    version="2025.2.26",
+    version="2025.3.3",
     description="An easy way to calculate CCBHC measurements.",
     long_description=read_me,
     long_description_content_type="text/markdown",
     url="https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements",
     author="Pesach Tikvah Hope Development Inc.",
     author_email="agursky@pesachtikvah.org",
+    maintainer="Alex Gursky, Yisroel Len",
+    maintainer_email="agursky@pesachtikvah.org, ylen@pesachtikvah.org",
     license="CC BY-NC-SA 4.0",
     project_urls={
         "Source" : "https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements"
