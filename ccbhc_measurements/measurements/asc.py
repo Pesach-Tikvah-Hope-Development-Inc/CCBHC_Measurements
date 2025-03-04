@@ -663,12 +663,24 @@ class ASC(Measurement):
 
     SAMHSA allows for multiple systematic screening methods to be used (AUDIT, AUDIT-C, Single Question Screening),
     However, this code is currently only able to process AUDIT screenings.
+
+    sub2_data must follow the its `Schema` as defined by the `Validation_Factory` in order to ensure the `submeasure` can run properly
+
+    >>> ASC_sub_2 = [
+    >>>     "Brief_Counselings"
+    >>> ]
+
+    >>> Brief_Counselings = {
+    >>>     "patient_id": (str, 'object'),
+    >>>     "encounter_id": (str, 'object')
+    >>> }
     """
 
     def __init__(self,sub1_data:list[pd.DataFrame],sub2_data:list[pd.DataFrame] = None):
         super().__init__("ASC")
         self.__sub1__: Submeasure = _Sub_1(self.get_name() + "_sub_1",sub1_data)
         self.__sub2__: Submeasure = _Sub_2(self.get_name() + "_sub_2",sub2_data)
+        # sub2 can only calculate if it has its subset of submeasure 1  
         self.__sub2__.__setattr__("__sub1_subset__",False)
 
     @override
@@ -691,7 +703,7 @@ class ASC(Measurement):
         
     def get_sub1_data(self) -> dict[str,pd.DataFrame]:
         """
-        Calculates and stores the Submeasure 1 data
+        Calculates the Submeasure 1 data
 
         Returns
         -------
@@ -721,7 +733,7 @@ class ASC(Measurement):
             pd.DataFrame
                 Submeasure Data
         """
-        try:
+        try: # make sure the sub1 subset exists, if not, create it. allowing for easy front end user expieriance :) 
             if not self.__sub2__.__sub1_subset__:
                 self.get_sub1_data()
             return self.__sub2__.get_submeasure_data()
@@ -750,13 +762,13 @@ class ASC(Measurement):
         """
         # sub 2's populace is a subset of sub 1's numerator,
         # so all that's needed to do is filter sub 1's results where numerator == True
+        # get the names of the dataframes
         populace = self.__sub1__.get_name()
         stratification = self.__sub1__.get_name() + '_stratification'
-
+        # get the data of the dataframes and filter
         populace = sub1_results.get(populace)
         populace = populace[populace['numerator']].copy()
         populace = populace.drop('numerator',axis=1)
-
         stratification = sub1_results.get(stratification)
         stratification = stratification[stratification['patient_id'].isin(populace['patient_id'])].copy()
         return populace,stratification
