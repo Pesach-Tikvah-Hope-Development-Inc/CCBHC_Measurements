@@ -523,6 +523,7 @@ class _Sub_2(Submeasure):
         """
         Checks if the encounter_id is in the counselings Dataframe
         """
+        # FAQ says that the counseling should take place in the same encounter as the screening
         self.__populace__['numerator'] = self.__populace__['encounter_id'].isin(counselings['encounter_id'])
 
     @override
