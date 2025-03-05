@@ -56,7 +56,7 @@ class _Sub_1(Submeasure):
         index_visits = index_visits.drop_duplicates('patient_measurement_year_id',keep='first') # keep the first index visit per patient per year
         self.__index_visits__ = index_visits
 
-    def __create_patient_measurement_year_id(self, ids:pd.Series, dates:pd.Series) -> pd.DataFrame:
+    def __create_patient_measurement_year_id(self, ids:pd.Series, dates:pd.Series) -> pd.Series:
         """
         Creates a unique id per patient per year
 

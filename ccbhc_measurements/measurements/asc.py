@@ -46,7 +46,7 @@ class _Sub_1(Submeasure):
         multiple_visits = (visits.groupby('patient_measurement_year_id')['patient_id'].size() >= 2).reset_index()['patient_measurement_year_id'].to_list()
         self.__populace__ = visits[visits['patient_measurement_year_id'].isin(multiple_visits)].copy()
 
-    def __create_patient_measurement_year_id(self, ids:pd.Series, dates:pd.Series) -> pd.DataFrame:
+    def __create_patient_measurement_year_id(self, ids:pd.Series, dates:pd.Series) -> pd.Series:
         """
         Creates a unique id per patient per year
 
