@@ -270,18 +270,18 @@ class _Sub_1(Submeasure):
         """
         self.__set_patient_demographics()
         
+    def __set_patient_demographics(self) -> None:
+        """
+        Merges DEMOGRAPHICS into stratification
+        """
+        self.__stratification__ = self.__stratification__.merge(self.__DEMOGRAPHICS__,how='left')
+        
     @override
     def _set_encounter_stratification(self) -> None:
         """
         Sets stratification data that is encounter dependant
         """
         self.__set_insurance_data()
-        
-    def __set_patient_demographics(self) -> None:
-        """
-        Merges DEMOGRAPHICS into stratification
-        """
-        self.__stratification__ = self.__stratification__.merge(self.__DEMOGRAPHICS__,how='left')
 
     def __set_insurance_data(self) -> None:
         """
