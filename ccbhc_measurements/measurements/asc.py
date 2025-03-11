@@ -21,12 +21,33 @@ class _Sub_1(Submeasure):
         dataframes
             A validated list of dataframes
         """
-        self.__REGULAR_VISITS__ = dataframes[0].sort_values('encounter_datetime').copy()
-        self.__PREVENTIVE_VISITS__ = dataframes[1].sort_values('encounter_datetime').copy()
-        self.__SCREENINGS__ = dataframes[2].sort_values('screening_datetime').copy()
-        self.__DIAGNOSIS__ = dataframes[3].sort_values('encounter_datetime').copy()
-        self.__DEMOGRAPHICS__ = dataframes[4].sort_values('patient_id').copy()
-        self.__INSURANCE__ = dataframes[5].sort_values('patient_id').copy()
+        # NOTE this is a quick fix to make the front end nicer, that back end needs refactoring
+        self.__REGULAR_VISITS__ = self.__get_regular_visits(dataframes[0])
+        self.__PREVENTIVE_VISITS__ = self.__get_preventitive_visits(dataframes[0])
+        self.__SCREENINGS__ = self.__get_screenings(dataframes[0])
+        self.__DIAGNOSIS__ = dataframes[1].sort_values('encounter_datetime').copy()
+        self.__DEMOGRAPHICS__ = dataframes[2].sort_values('patient_id').copy()
+        self.__INSURANCE__ = dataframes[3].sort_values('patient_id').copy()
+
+    def __get_regular_visits(self, df:pd.DataFrame) -> pd.DataFrame:
+        """
+        Doc String
+        """
+        return df[['patient_id','patient_DOB','encounter_id','encounter_datetime']].copy()
+
+    def __get_preventitive_visits(self, df:pd.DataFrame) -> pd.DataFrame:
+        """
+        Doc String
+        """
+        return df[['patient_id','patient_DOB','encounter_id','encounter_datetime','cpt_code']].copy()
+
+    def __get_screenings(self, df:pd.DataFrame) -> pd.DataFrame:
+        """
+        Doc String
+        """
+        df['screening_datetime'] = df['encounter_datetime'].copy()
+        screening_mask = df['is_screening']
+        return df[['patient_id','screening_datetime']][screening_mask].copy()
 
     @override
     def _set_populace(self) -> None:
@@ -422,183 +443,6 @@ class _Sub_1(Submeasure):
         self.__populace__ = self.__populace__.sort_values('patient_measurement_year_id')
         self.__stratification__ = self.__stratification__.sort_values('patient_id')
 
-
-class _Sub_2(Submeasure):
-    """
-    Percentage of clients who were identified as unhealthy alcohol users and who recieved brief counseling
-    """
-
-    @override
-    def get_submeasure_data(self) -> dict[pd.DataFrame:pd.DataFrame]:
-        """
-        Calls all functions of the submeasure
-
-        Returns
-        -------
-        dict[pd.DataFrame:pd.DataFrame]
-            pd.Dataframe
-                Calculated populace data
-            pd.Dataframe
-                Calculated stratified data
-        
-        Raises
-        ------
-        AttributeError
-            When the sub1 data is not set
-        """
-        if not self.__sub1_subset__:
-            raise AttributeError("ASC Sub 2 is a subset of ASC Sub 1. Do not call ASC.__sub2__.getsubmeasure_data() directly!")
-        else:
-            return super().get_submeasure_data()
-
-    @override
-    def _set_dataframes(self,dataframes:list[pd.DataFrame]) -> None:
-        """
-        Sets private attributes to the validated dataframes that get used to calculate the submeasure
-
-        Paramaters
-        ----------
-        dataframes
-            List of dataframes
-        """
-        self.__DATA__ = dataframes[0].copy()
-
-    def _set_sub1_subset(self,sub1_subset:tuple[pd.DataFrame,pd.DataFrame]) -> None:
-        """
-        Sets the sub1 subset data
-
-        Parameters
-        ----------
-        sub1_subset
-            pd.Dataframe
-                sub1 numerator populace
-            pd.Dataframe
-                sub1 numerator stratification
-        """
-        self.__SUB1_NUMERATOR__ = sub1_subset[0].copy()
-        self.__SUB1_STRATIFY__ = sub1_subset[1].copy()
-        self.__sub1_subset__ = True
-
-    @override
-    def _set_populace(self) -> None:
-        """
-        Sets the initial population for the denominator
-        """
-        self.__populace__ = self.__SUB1_NUMERATOR__.copy()
-
-    @override
-    def _remove_exclusions(self) -> None:
-        """
-        Removes any exclusions from the population
-        """
-        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
-        pass
-
-    @override
-    def _apply_time_constraint(self) -> None:
-        """
-        Applies time constraints to the denominator populace
-        """
-        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
-        pass
-
-    @override
-    def _find_performance_met(self) -> None:
-        """
-        Finds clients who've received brief counseling
-        """
-        counselings = self.__get_counselings()
-        self.__check_counselings(counselings)
-
-    def __get_counselings(self) -> pd.DataFrame:
-        """
-        Returns
-        -------
-        pd.Dataframe
-            brief counselings
-        """
-        return self.__DATA__.copy()
-
-    def __check_counselings(self,counselings) -> None:
-        """
-        Checks if the encounter_id is in the counselings Dataframe
-        """
-        # FAQ says that the counseling should take place in the same encounter as the screening
-        self.__populace__['numerator'] = self.__populace__['encounter_id'].isin(counselings['encounter_id'])
-
-    @override
-    def _set_stratification(self) -> None:
-        """
-        Sets initial population for the stratification
-        """
-        self.__stratification__ = self.__SUB1_STRATIFY__.copy()
-
-    @override
-    def _set_patient_stratification(self) -> None:
-        """
-        Sets stratification data that is patient dependant
-
-        This method must be implemented by the concrete class 
-        to define how the patient stratification is obtained
-        """
-        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
-        pass
-
-    @override
-    def _set_encounter_stratification(self) -> None:
-        """
-        Sets stratification data that is encounter dependant
-
-        This method must be implemented by the concrete class 
-        to define how the encounter stratification is obtained
-        """
-        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
-        pass
-
-    @override
-    def _fill_blank_stratification(self) -> None:
-        """
-        Fills all blank values in the stratification
-
-        This method must be implemented by the concrete class 
-        to define how the blank values are filled
-        """
-        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
-        pass
-
-    @override
-    def _set_final_denominator_data(self) -> None:
-        """
-        Sets all data that is needed and unique to the Submeasure's denominator populace
-
-        This method must be implemented by the concrete class 
-        to define how the populace data is trimmed
-        """
-        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
-        pass
-
-    @override
-    def _trim_unnecessary_stratification_data(self) -> None:
-        """
-        Removes all data that isn't needed for the Submeasure's stratification
-
-        This method must be implemented by the concrete class 
-        to define how the stratification data is trimmed
-        """
-        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
-        pass
-
-    @override
-    def _sort_final_data(self) -> None:
-        """
-        Sorts the Populace and Stratification dataframes
-
-        This method must be implemented by the concrete class 
-        to define how the dataframes is trimmed
-        """
-        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
-        pass
-
 class ASC(Measurement):
     """
     The ASC measure calculates the Percentage of clients aged 18 years and older who were
@@ -615,32 +459,19 @@ class ASC(Measurement):
     sub1_data must follow the its `Schema` as defined by the `Validation_Factory` in order to ensure the `submeasure` can run properly
     
     >>> ASC_sub_1 = [
-    >>> "Regular_Visits",
-    >>> "Preventive_Visits",
-    >>> "Alcohol_Screenings",
-    >>> "Diagnostic_History",
-    >>> "Demographic_Data",
-    >>> "Insurance_History"
+    >>>     "Alcohol_Encounters",
+    >>>     "Diagnostic_History",
+    >>>     "Demographic_Data",
+    >>>     "Insurance_History"
     >>> ]
 
-    >>> Regular_Visits = {
-    >>>     "patient_id": (str, 'object'),
-    >>>     "patient_DOB": ("datetime64[ns]",),
-    >>>     "encounter_id": (str, 'object'),
-    >>>     "encounter_datetime": ("datetime64[ns]",)
-    >>> }
-    
-    >>> Preventive_Visits = {
+    >>> Alcohol_Encounters = {
     >>>     "patient_id": (str, 'object'),
     >>>     "patient_DOB": ("datetime64[ns]",),
     >>>     "encounter_id": (str, 'object'),
     >>>     "encounter_datetime": ("datetime64[ns]",),
-    >>>     "cpt_code": (str, 'object')
-    >>> }
-    
-    >>> Alcohol_Screenings = {
-    >>>     "patient_id": (str, 'object'),
-    >>>     "screening_datetime": ("datetime64[ns]",)
+    >>>     "cpt_code": (str, 'object'),
+    >>>     "is_screening": (bool,) 
     >>> }
     
     >>> Diagnostic_History = {
@@ -664,25 +495,11 @@ class ASC(Measurement):
 
     SAMHSA allows for multiple systematic screening methods to be used (AUDIT, AUDIT-C, Single Question Screening),
     However, this code is currently only able to process AUDIT screenings.
-
-    sub2_data must follow the its `Schema` as defined by the `Validation_Factory` in order to ensure the `submeasure` can run properly
-
-    >>> ASC_sub_2 = [
-    >>>     "Brief_Counselings"
-    >>> ]
-
-    >>> Brief_Counselings = {
-    >>>     "patient_id": (str, 'object'),
-    >>>     "encounter_id": (str, 'object')
-    >>> }
     """
 
-    def __init__(self,sub1_data:list[pd.DataFrame],sub2_data:list[pd.DataFrame] = None):
+    def __init__(self,sub1_data:list[pd.DataFrame]):
         super().__init__("ASC")
         self.__sub1__: Submeasure = _Sub_1(self.get_name() + "_sub_1",sub1_data)
-        self.__sub2__: Submeasure = _Sub_2(self.get_name() + "_sub_2",sub2_data)
-        # sub2 can only calculate if it has its subset of submeasure 1  
-        self.__sub2__.__setattr__("__sub1_subset__",False)
 
     @override
     def get_all_submeasures(self) -> dict[str,pd.DataFrame]:
@@ -695,81 +512,7 @@ class ASC(Measurement):
                 - pd.DataFrame: The data corresponding to that submeasure
         """
         try:
-            sub1_results = self.get_sub1_data()
-            sub2_results = self.get_sub2_data()
-            full_results = sub1_results | sub2_results
-            return full_results
-        except Exception:
-            raise
-        
-    def get_sub1_data(self) -> dict[str,pd.DataFrame]:
-        """
-        Calculates the Submeasure 1 data
-
-        Returns
-        -------
-        dict[str:pd.DataFrame]
-            str
-                Submeasure name
-            pd.DataFrame
-                Submeasure Data
-        """
-        try:
             sub1_results = self.__sub1__.get_submeasure_data()
-            sub1_subset = self.__get_sub2_subset(sub1_results)
-            self.__sub2__._set_sub1_subset(sub1_subset)
             return sub1_results
         except Exception:
             raise
-        
-    def get_sub2_data(self) -> dict[str,pd.DataFrame]:
-        """
-        Calculates the Submeasure 2 data
-
-        Returns
-        -------
-        dict[str:pd.DataFrame]
-            str
-                Submeasure name
-            pd.DataFrame
-                Submeasure Data
-        """
-        try: # make sure the sub1 subset exists, if not, create it. allowing for easy front end user expieriance :) 
-            if not self.__sub2__.__sub1_subset__:
-                self.get_sub1_data()
-            return self.__sub2__.get_submeasure_data()
-        except Exception:
-            raise
-
-    def __get_sub2_subset(self,sub1_results:dict[str:pd.DataFrame]) -> tuple[pd.DataFrame,pd.DataFrame]:
-        """
-        Filters sub1 populace down to eligible sub2 clients
-
-        Parameters
-        ----------
-        sub1_results
-            str
-                Name
-            pd.Dataframe
-                Data
-        
-        Returns
-        -------
-        tuple
-            pd.Dataframe
-                Populace
-            pd.Dataframe
-                Stratification
-        """
-        # sub 2's populace is a subset of sub 1's numerator,
-        # so all that's needed to do is filter sub 1's results where numerator == True
-        # get the names of the dataframes
-        populace = self.__sub1__.get_name()
-        stratification = self.__sub1__.get_name() + '_stratification'
-        # get the data of the dataframes and filter
-        populace = sub1_results.get(populace)
-        populace = populace[populace['numerator']].copy()
-        populace = populace.drop('numerator',axis=1)
-        stratification = sub1_results.get(stratification)
-        stratification = stratification[stratification['patient_id'].isin(populace['patient_id'])].copy()
-        return populace,stratification

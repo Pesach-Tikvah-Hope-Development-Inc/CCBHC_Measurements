@@ -10,22 +10,13 @@ Diagnostic_History = {
     "encounter_datetime": ("datetime64[ns]",),
     "diagnosis": (str, 'object')
 }
-Regular_Visits = {
-    "patient_id": (str, 'object'),
-    "patient_DOB": ("datetime64[ns]",),
-    "encounter_id": (str, 'object'),
-    "encounter_datetime": ("datetime64[ns]",)
-}
-Preventive_Visits = {
+Alcohol_Encounters = {
     "patient_id": (str, 'object'),
     "patient_DOB": ("datetime64[ns]",),
     "encounter_id": (str, 'object'),
     "encounter_datetime": ("datetime64[ns]",),
-    "cpt_code": (str, 'object')
-}
-Alcohol_Screenings = {
-    "patient_id": (str, 'object'),
-    "screening_datetime": ("datetime64[ns]",)
+    "cpt_code": (str, 'object'),
+    "is_screening": (bool,) 
 }
 Brief_Counselings = {
     "patient_id": (str, 'object'),
@@ -69,11 +60,7 @@ def get_schema(df_name:str) -> dict[str:type]:
             return Diagnostic_History
         case "Insurance_History":
             return Insurance_History
-        case "Regular_Visits":
-            return Regular_Visits
-        case "Preventive_Visits":
-            return Preventive_Visits
-        case "Alcohol_Screenings":
-            return Alcohol_Screenings
+        case "Alcohol_Encounters":
+            return Alcohol_Encounters
         case "Brief_Counselings":
             return Brief_Counselings

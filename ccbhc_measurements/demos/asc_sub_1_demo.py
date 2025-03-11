@@ -6,12 +6,17 @@ import pandas as pd
 
 random.seed(12345)
 pop_size = 1000
-preventitive_patients = 20
 encouters_per_patient = 20
+preventive_visits = 10
+screenings = 25
 cpt_codes = [
-    '99385', '99386', '99387', '99395', '99396','99397', # preventive cpts
-    '12345', '67890' # dummy cpts
-    ]
+    '99385',
+    '99386',
+    '99387',
+    '99395',
+    '99396',
+    '99397'
+]
 races = [
     "White",
     "Black",
@@ -29,26 +34,24 @@ insurances = [
     "Medicare",
     "Medicaid"
     ]
-patient_id = random.sample(range(10_000,99_999),pop_size - preventitive_patients)
-dob = [(datetime(1990, 1, 1) + timedelta(days=random.randint(0, (datetime(2020, 12, 31) - datetime(1990, 1, 1)).days))) for _ in range(pop_size - preventitive_patients)]
-
-# make rand values for visits df
-visits_patient_id = patient_id * encouters_per_patient
-dob = dob*encouters_per_patient
-encounter_id = random.sample(range(10_000,99_999),k= (pop_size - preventitive_patients) * encouters_per_patient)
-encounter_date = [(datetime(2024, 1, 1) + timedelta(days=random.randint(0, 365))) for _ in range((pop_size - preventitive_patients) * encouters_per_patient)]
-
-# make rand values preventitive visits
-preventitive_patient_id = random.sample(range(1_000,9_999),preventitive_patients)
-preventitive_dob = [(datetime(1990, 1, 1) + timedelta(days=random.randint(0, (datetime(2020, 12, 31) - datetime(1990, 1, 1)).days))) for _ in range(preventitive_patients)]
-preventitive_encounter_id = random.sample(range(1_000,9_999),k= preventitive_patients)
-preventitive_encounter_date = [(datetime(2024, 1, 1) + timedelta(days=random.randint(0, 365))) for _ in range(preventitive_patients)]
-preventitive_cpt_code = random.choices(cpt_codes,k=preventitive_patients)
-
-# make rand values for screenings
-screening_ids = patient_id + preventitive_patient_id
-screening_datetime = [(datetime(2023, 1, 1) + timedelta(days=random.randint(0, 1095))) for _ in range(pop_size)]
-
+# create random patient data
+patient_id = random.sample(range(10_000,99_999),pop_size)
+dob = [(datetime(1990, 1, 1) + timedelta(days=random.randint(0, (datetime(2020, 12, 31) - datetime(1990, 1, 1)).days))) for _ in range(pop_size)]
+# create random encounter data
+encounter_patient_ids = patient_id * encouters_per_patient
+encounter_dobs = dob*encouters_per_patient
+encounter_id = random.sample(range(10_000,99_999),k= (pop_size) * encouters_per_patient)
+encounter_date = [(datetime(2024, 1, 1) + timedelta(days=random.randint(0, 365))) for _ in range((pop_size) * encouters_per_patient)]
+# set 10 random visits as preventitive
+encounter_cpt_code = ['dummy_cpt'] * len(encounter_patient_ids)
+for num in range(preventive_visits):
+    index = random.randint(0,len(encounter_cpt_code))
+    encounter_cpt_code[index] = random.choices(cpt_codes)
+# set 25 random visits as screenings
+is_screening = [False] * len(encounter_patient_ids)
+for num in range(screenings):
+    index = random.randint(0,len(is_screening))
+    is_screening[index] = True
 # make rand values for Diagnosis
 diagnosis_patient_id = random.sample(patient_id,k=100)
 diagnosis_date = [(datetime(2024, 1, 1) + timedelta(days=random.randint(0, 365))) for _ in range(100)]
@@ -63,31 +66,17 @@ insurance = random.choices(insurances,k=pop_size)
 insurance_start_date = [(datetime(2023, 1, 1) + timedelta(days=random.randint(0, (datetime(2024, 12, 31) - datetime(2023, 1, 1)).days))) for _ in range(pop_size)]
 insurance_end_date = [start + relativedelta(years=1) for start in insurance_start_date]
 
-
-visits = pd.DataFrame({
-    "patient_id":visits_patient_id,
-    "patient_DOB":dob,
+encounter_data = pd.DataFrame(data={
+    "patient_id":encounter_patient_ids,
+    "patient_DOB":encounter_dobs,
     "encounter_id":encounter_id,
-    "encounter_datetime":encounter_date
-})
-visits.patient_id = visits.patient_id.astype(str)
-visits.encounter_id = visits.encounter_id.astype(str)
-
-preventitive_visits = pd.DataFrame({
-    "patient_id":preventitive_patient_id,
-    "patient_DOB":preventitive_dob,
-    "encounter_id":preventitive_encounter_id,
-    "encounter_datetime":preventitive_encounter_date,
-    "cpt_code" : preventitive_cpt_code
-})
-preventitive_visits.patient_id = preventitive_visits.patient_id.astype(str)
-preventitive_visits.encounter_id = preventitive_visits.encounter_id.astype(str)
-
-screenings = pd.DataFrame({
-    "patient_id":screening_ids,
-    "screening_datetime":screening_datetime
-})
-screenings.patient_id = screenings.patient_id.astype(str)
+    "encounter_datetime":encounter_date,
+    "cpt_code":encounter_cpt_code,
+    "is_screening":is_screening
+    }
+)
+encounter_data['patient_id'] = encounter_data['patient_id'].astype(str)
+encounter_data['encounter_id'] = encounter_data['encounter_id'].astype(str)
 
 diagnosis_data = pd.DataFrame({
                     "patient_id":diagnosis_patient_id,
@@ -96,16 +85,16 @@ diagnosis_data = pd.DataFrame({
 diagnosis_data.patient_id = diagnosis_data.patient_id.astype(str)
 
 demographic_data = pd.DataFrame({
-                    "patient_id":patient_id + preventitive_patient_id,
+                    "patient_id":patient_id,
                     "race":race,
                     "ethnicity":ethnicity})
 demographic_data.patient_id = demographic_data.patient_id.astype(str)
 
 insurance_data = pd.DataFrame({
-                    "patient_id":patient_id + preventitive_patient_id,
+                    "patient_id":patient_id,
                     "insurance":insurance,
                     "start_datetime":insurance_start_date,
                     "end_datetime":insurance_end_date,})
 insurance_data.patient_id = insurance_data.patient_id.astype(str)
 
-data = [visits, preventitive_visits, screenings, diagnosis_data, demographic_data, insurance_data]
+data = [encounter_data, diagnosis_data, demographic_data, insurance_data]

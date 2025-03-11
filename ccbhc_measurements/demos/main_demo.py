@@ -2,11 +2,10 @@ from ccbhc_measurements.measurements.dep_rem import Dep_Rem
 from ccbhc_measurements.measurements.asc import ASC
 from ccbhc_measurements.demos.dep_rem_demo import data as dr_sub_1_data
 from ccbhc_measurements.demos.asc_sub_1_demo import data as asc_sub_1_data
-from ccbhc_measurements.demos.asc_sub_2_demo import data as asc_sub_2_data
 
 measurements = [
     Dep_Rem(dr_sub_1_data),
-    ASC(asc_sub_1_data,asc_sub_2_data)
+    ASC(asc_sub_1_data)
 ]
 output_path = r'../dashboard/excel files/'
 
