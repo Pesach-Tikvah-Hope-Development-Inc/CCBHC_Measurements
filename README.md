@@ -45,7 +45,7 @@ At the moment we only have these Measurements, but we plan on releasing a new Me
 
 [Dep Rem 6 Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/DEP%20REM%20Input-Output%20Example.pdf
 [ASC Submeasure 1 Detailed Data Input and Output Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/ASC%20Input%20Output%20Requirements.pdf
-[ASC Submeasure 1 README]:ccbhc_measurements\demos\ASC.md
+[ASC Submeasure 1 README]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos/ASC.md
 
 ## Code Demonstration
 

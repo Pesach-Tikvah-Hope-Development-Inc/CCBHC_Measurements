@@ -13,7 +13,7 @@ The ASC measure calculates the Percentage of clients aged 18 years and older who
 screened for unhealthy alcohol use using a Systematic Screening Method at least once within the
 last 12 months AND who received brief counseling if identified as an unhealthy alcohol user
 
-[Click here to see SAMHSA's ](https://www.samhsa.gov/sites/default/files/ccbhc-quality-measures-technical-specifications-manual.pdf)
+[Click here to see SAMHSA's definitions](https://www.samhsa.gov/sites/default/files/ccbhc-quality-measures-technical-specifications-manual.pdf)
 
 ### SubMeasure 1
 
