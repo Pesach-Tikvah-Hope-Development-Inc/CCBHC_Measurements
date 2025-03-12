@@ -22,6 +22,8 @@ using a Systematic Screening Method at least once within the last 12 months
 
 ## Required Data
 
+[Click here to see the Input and Output Diagram](https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/ASC%20Input%20Output%20Requirements.pdf)
+
 ### SubMeasure 1
 
 The following dataframes are required to calculate the ASC SubMeasure 1
