@@ -34,6 +34,7 @@ We've also created a base Power BI file as a foundation for a dashboard. [Check 
 
  - **DEP REM 6 -** Depression Remission at Six Months 
     - [DEP-REM-6 Detailed Data Input and Output Diagram][Dep Rem 6 Diagram]
+    - [DEP-REM-6 Submeasure 1 README][DEP-REM-6 Submeasure 1 README]
  - **ASC Submeasure 1-** Preventive Care and Screening: Unhealthy Alcohol Use: Screening & Brief Counseling 
     - [ASC Submeasure 1 Detailed Data Input and Output Diagram][ASC Submeasure 1 Detailed Data Input and Output Diagram]
     - [ASC Submeasure 1 README][ASC Submeasure 1 README]
@@ -44,6 +45,7 @@ The definition for these Measurements can be found at <https://www.samhsa.gov/si
 At the moment we only have these Measurements, but we plan on releasing a new Measurement every two weeks.
 
 [Dep Rem 6 Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/DEP%20REM%20Input-Output%20Example.pdf
+[DEP-REM-6 Submeasure 1 README]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos/DEP-REM.md
 [ASC Submeasure 1 Detailed Data Input and Output Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/ASC%20Input%20Output%20Requirements.pdf
 [ASC Submeasure 1 README]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos/ASC.md
 
