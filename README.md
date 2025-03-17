@@ -125,9 +125,11 @@ pip install ccbhc_measurements
 
 ## Contributions and Discussions
 
-Feel free to add and create you own ```Measurements```. All ```Measurements``` should follow [this uml][uml].
+Feel free to add and create you own ```Measurements```. All ```Measurements``` should follow [this uml][uml] and you can use [this guide][measurement creation guide] to show you how to do it!.
+
 Send us your recomendations, bugs, questions or feedback at [agursky@pesachtikvah.com](mailto:agursky@pesachtikvah.com)
 
+[measurement creation guide]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/measurements/MEASUREMENTS.md
 [uml]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/Measurements%20UML.pdf
 
 <hr>
