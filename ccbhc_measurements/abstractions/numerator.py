@@ -9,6 +9,16 @@ class Numerator(ABC):
     """
 
     @abstractmethod
+    def _apply_time_constraint(self) -> None:
+        """
+        Applies time constraints to the denominator populace
+
+        This method must be implemented by the concrete class 
+        to define how time constraints are applied to the numerator data
+        """
+        pass
+
+    @abstractmethod
     def _find_performance_met(self) -> None:
         """
         Checks the denominator populace based on numerator performance criteria
@@ -16,15 +26,5 @@ class Numerator(ABC):
         This method must be implemented by the concrete class 
         to define how the denominator data is checked 
         based on the criteria used to identify the numerator
-        """
-        pass
-
-    @abstractmethod
-    def _apply_time_constraint(self) -> None:
-        """
-        Applies time constraints to the denominator populace
-
-        This method must be implemented by the concrete class 
-        to define how time constraints are applied to the numerator data
         """
         pass
