@@ -7,6 +7,7 @@
 - [Creating Submeasures](#creating-submeasures)
 - [Adding Demo Data](#adding-demo-data)
 - [Code Demonstration](#code-demonstration)
+- [Notes](#notes)
 
 ## Creating a Measurement
 
