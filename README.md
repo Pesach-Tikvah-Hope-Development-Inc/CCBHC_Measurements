@@ -125,7 +125,7 @@ pip install ccbhc_measurements
 
 ## Contributions and Discussions
 
-Feel free to add and create you own ```Measurements```. All ```Measurements``` should follow [this uml][uml] and you can use [this guide][measurement creation guide] to show you how to do it!.
+Feel free to add and create you own ```Measurements```. All ```Measurements``` should follow [this uml][uml] and you can use [this guide][measurement creation guide] to show you how to do it!
 
 Send us your recomendations, bugs, questions or feedback at [agursky@pesachtikvah.com](mailto:agursky@pesachtikvah.com)
 
