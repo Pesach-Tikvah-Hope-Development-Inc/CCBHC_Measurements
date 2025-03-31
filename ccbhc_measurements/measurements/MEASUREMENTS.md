@@ -48,11 +48,18 @@ Within ccbhc_measurements->validation->schemas.py create dictionaries where the 
 
 In order to test the acccuracy of the code and to create the dashboard, demo files are used for non-HIPPA demonstrations. [More details here][DEP-REM demo]
 
-In addition to the demo data, there should also be a NEW_MEASUREMENT.md which tells the front end user what data is needed and how it should be formatted. [More details here][DEP-REM read me]
+In order to help the front end user, there should also be a NEW_MEASUREMENT Input Output.pdf/jpg diagram which tells the front end user what the input and output data should look like. [More details here][DEP-REM input output]
 
-These files should be made within ccbhc_measurements->demos and added to main_demo.py.
+In order to help the front end user, there should also be a NEW_MEASUREMENT.md which tells the front end user what data is needed and how it should be formatted. [More details here][DEP-REM read me]
+
+The demo file should be made within ccbhc_measurements->demos and added to main_demo.py.
+
+The input output file should be made within ccbhc_measurements->diagrams.
+
+The md file should be made within ccbhc_measurements->demos.
 
 [DEP-REM demo]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos/dep_rem_demo.py
+[DEP-REM input output]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/DEP%20REM%20Input-Output%20Example.jpg
 [DEP-REM read me]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos/DEP-REM.md
 
 ## Code Demonstration
