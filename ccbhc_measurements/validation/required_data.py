@@ -7,11 +7,11 @@ DEP_REM_sub_1 = [
 ASC_sub_1 = [
     "Alcohol_Encounters",
     "Diagnostic_History",
-    "Demographic_Data",
+    "ASC_Demographic_Data",
     "Insurance_History"
 ]
 ASC_sub_2 = [
-    "Brief_Counselings"
+    None
 ]
 
 

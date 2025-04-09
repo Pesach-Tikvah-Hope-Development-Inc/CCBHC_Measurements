@@ -1,5 +1,4 @@
-from datetime import timedelta
-from datetime import datetime
+from datetime import timedelta, datetime
 from dateutil.relativedelta import relativedelta
 import random
 import pandas as pd
@@ -8,7 +7,7 @@ random.seed(12345)
 pop_size = 1000
 encouters_per_patient = 20
 preventive_visits = 10
-screenings = 25
+screenings = 250
 cpt_codes = [
     '99385',
     '99386',
@@ -16,6 +15,11 @@ cpt_codes = [
     '99395',
     '99396',
     '99397'
+]
+screening_types = [
+    "audit",
+    "audit-c",
+    "single question screening"
 ]
 races = [
     "White",
@@ -47,11 +51,17 @@ encounter_cpt_code = ['dummy_cpt'] * len(encounter_patient_ids)
 for num in range(preventive_visits):
     index = random.randint(0,len(encounter_cpt_code))
     encounter_cpt_code[index] = random.choices(cpt_codes)
-# set 25 random visits as screenings
-is_screening = [False] * len(encounter_patient_ids)
+# set counselings
+for num in range(375):
+    index = random.randint(0,len(encounter_id))
+    encounter_cpt_code[index] = 'G2200'
+# set random visits as screenings
+screening_type = [None] * len(encounter_patient_ids)
+score = [None] * len(encounter_patient_ids)
 for num in range(screenings):
-    index = random.randint(0,len(is_screening))
-    is_screening[index] = True
+    index = random.randint(0,len(screening_type))
+    screening_type[index] = random.choices(screening_types).pop()
+    score[index] = random.randint(0,10)
 # make rand values for Diagnosis
 diagnosis_patient_id = random.sample(patient_id,k=100)
 diagnosis_date = [(datetime(2024, 1, 1) + timedelta(days=random.randint(0, 365))) for _ in range(100)]
@@ -66,13 +76,14 @@ insurance = random.choices(insurances,k=pop_size)
 insurance_start_date = [(datetime(2023, 1, 1) + timedelta(days=random.randint(0, (datetime(2024, 12, 31) - datetime(2023, 1, 1)).days))) for _ in range(pop_size)]
 insurance_end_date = [start + relativedelta(years=1) for start in insurance_start_date]
 
-encounter_data = pd.DataFrame(data={
+encounter_data = pd.DataFrame({
     "patient_id":encounter_patient_ids,
     "patient_DOB":encounter_dobs,
     "encounter_id":encounter_id,
     "encounter_datetime":encounter_date,
     "cpt_code":encounter_cpt_code,
-    "is_screening":is_screening
+    "screening":screening_type,
+    "score":score
     }
 )
 encounter_data['patient_id'] = encounter_data['patient_id'].astype(str)
@@ -84,8 +95,10 @@ diagnosis_data = pd.DataFrame({
                     "diagnosis":diagnosis})
 diagnosis_data.patient_id = diagnosis_data.patient_id.astype(str)
 
+sex = random.choices(["male","female"],k=pop_size)
 demographic_data = pd.DataFrame({
                     "patient_id":patient_id,
+                    "sex":sex,
                     "race":race,
                     "ethnicity":ethnicity})
 demographic_data.patient_id = demographic_data.patient_id.astype(str)

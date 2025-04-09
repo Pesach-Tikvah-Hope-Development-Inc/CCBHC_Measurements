@@ -2,8 +2,9 @@ from dateutil.relativedelta import relativedelta
 from typing import override
 from datetime import datetime
 import pandas as pd
-from ccbhc_measurements.abstractions.submeasure import Submeasure
 from ccbhc_measurements.abstractions.measurement import Measurement
+from ccbhc_measurements.abstractions.submeasure import Submeasure
+from ccbhc_measurements.strategies.alcohol_screening_strategies import alcohol_screeners, get_screening_strategy
 
 class _Sub_1(Submeasure):
     """
@@ -21,33 +22,35 @@ class _Sub_1(Submeasure):
         dataframes
             A validated list of dataframes
         """
-        # NOTE this is a quick fix to make the front end nicer, that back end needs refactoring
-        self.__REGULAR_VISITS__ = self.__get_regular_visits(dataframes[0])
-        self.__PREVENTIVE_VISITS__ = self.__get_preventitive_visits(dataframes[0])
+        # NOTE this is a quick fix to make the front end nicer, the back end needs refactoring
+        self.__DATA__ = dataframes[0].copy()
+        self.__REGULAR_VISITS__ = self.__get_regular_visits()
+        self.__PREVENTIVE_VISITS__ = self.__get_preventitive_visits()
         self.__SCREENINGS__ = self.__get_screenings(dataframes[0])
         self.__DIAGNOSIS__ = dataframes[1].sort_values('encounter_datetime').copy()
         self.__DEMOGRAPHICS__ = dataframes[2].sort_values('patient_id').copy()
         self.__INSURANCE__ = dataframes[3].sort_values('patient_id').copy()
 
-    def __get_regular_visits(self, df:pd.DataFrame) -> pd.DataFrame:
+    def __get_regular_visits(self) -> pd.DataFrame:
         """
         Doc String
         """
-        return df[['patient_id','patient_DOB','encounter_id','encounter_datetime']].copy()
+        return self.__DATA__[['patient_id','patient_DOB','encounter_id','encounter_datetime']].copy()
 
-    def __get_preventitive_visits(self, df:pd.DataFrame) -> pd.DataFrame:
+    def __get_preventitive_visits(self) -> pd.DataFrame:
         """
         Doc String
         """
-        return df[['patient_id','patient_DOB','encounter_id','encounter_datetime','cpt_code']].copy()
+        return self.__DATA__[['patient_id','patient_DOB','encounter_id','encounter_datetime','cpt_code']].copy()
 
     def __get_screenings(self, df:pd.DataFrame) -> pd.DataFrame:
         """
         Doc String
         """
         df['screening_datetime'] = df['encounter_datetime'].copy()
-        screening_mask = df['is_screening']
-        return df[['patient_id','screening_datetime']][screening_mask].copy()
+        # non screening encounters are None and None == None -> False
+        screening_mask = df['screening'] == df['screening']
+        return df[['patient_id','screening_datetime','screening','score']][screening_mask].copy()
 
     @override
     def _set_populace(self) -> None:
@@ -87,8 +90,7 @@ class _Sub_1(Submeasure):
 
     def __set_preventive_visits(self) -> None:
         """
-        Adds all patients who've had preventive visits during 
-        the measurement year to populace
+        Adds all patients who've had preventive visits during the measurement year to populace
         """
         if self.__PREVENTIVE_VISITS__.empty: # break out early if there are no preventive visits
             return
@@ -123,7 +125,7 @@ class _Sub_1(Submeasure):
         preventive_visits = preventive_visits.drop_duplicates(['patient_measurement_year_id']).copy()
         self.__populace__ = pd.concat([self.__populace__,preventive_visits])
 
-    def __get_year(self,encounter_datetime:pd.Series) -> pd.Series:
+    def __get_year(self, encounter_datetime:pd.Series) -> pd.Series:
         """
         Gets the year part of a date
 
@@ -151,7 +153,7 @@ class _Sub_1(Submeasure):
         self.__remove_age_exclusions()
         self.__remove_dementia_exclusions()
         # NOTE This is something we don't track, therefore it is commented out as I don't know how EHRs store this data and what it looks like
-        # If someone can make a pull request and write this code, :)
+        # If someone can make a pull request and write this code, Thanks :)
         # self.__remove_hospice_exclusions() 
 
     def __remove_age_exclusions(self) -> None:
@@ -315,7 +317,7 @@ class _Sub_1(Submeasure):
         self.__stratification__ = self.__stratification__.merge(results,how='left')
         self.__stratification__['medicaid'] = self.__stratification__['medicaid'].fillna(False) # replace all the "lost" patients from above without insurance
 
-    def __filter_insurance_dates(self,medicaid_data:pd.DataFrame) -> pd.DataFrame:
+    def __filter_insurance_dates(self, medicaid_data:pd.DataFrame) -> pd.DataFrame:
         """
         Removes insurances that weren't active at the time of the patient's visit
 
@@ -352,7 +354,7 @@ class _Sub_1(Submeasure):
         medicaid_data = self.__find_patients_with_only_medicaids(medicaid_data)
         return medicaid_data
 
-    def __find_plans_with_medicaid(self,plan:pd.Series) -> pd.Series:
+    def __find_plans_with_medicaid(self, plan:pd.Series) -> pd.Series:
         """
         Checks if the insurance name contains medicaid
         
@@ -384,7 +386,7 @@ class _Sub_1(Submeasure):
         """
         return col.map({True:1,False:2})
 
-    def __find_patients_with_only_medicaids(self,medicaid_data:pd.DataFrame) -> pd.DataFrame:
+    def __find_patients_with_only_medicaids(self, medicaid_data:pd.DataFrame) -> pd.DataFrame:
         """
         Calcutlates whether a patient has medicaid only or other insurance
         
@@ -443,6 +445,347 @@ class _Sub_1(Submeasure):
         self.__populace__ = self.__populace__.sort_values('patient_measurement_year_id')
         self.__stratification__ = self.__stratification__.sort_values('patient_id')
 
+    def _get_sub2_subset(self) -> dict[str:pd.DataFrame]:
+        """
+        Gets the starting submeasure 2 populace and stratification data
+
+        Retrurns
+        --------
+        Dictionary[str,pd.DataFrame]
+            str
+                Name of the data subset
+            pd.Dataframe
+                Data
+        """
+        sub2_pop = self.__get_sub2_populace()
+        sub2_counselings = self.__get_counselings()
+        sub2_strat = self.__get_sub2_stratification(sub2_pop['patient_id'])
+        return {
+            'POPULACE':sub2_pop,
+            'COUNSELINGS':sub2_counselings,
+            'STRATIFICATION':sub2_strat
+        }
+
+    def __get_sub2_populace(self) -> pd.DataFrame:
+        """
+        Gets the starting submeasure 2 populace
+
+        Returns
+        -------
+        pd.Dataframe
+            Initial submeasure 2 populace
+        """
+        sub2_pop = self.__initialize_sub2_populace()
+        sub2_pop = self.__merge_sub2_patient_data(sub2_pop)
+        sub2_pop['screening'] = sub2_pop['screening'].str.lower()
+        sub2_pop['sex'] = sub2_pop['sex'].str.lower()
+        return sub2_pop
+
+    def __initialize_sub2_populace(self) -> pd.DataFrame:
+        """
+        Gets all patients who've had alcohol screenings
+
+        Returns
+        -------
+        pd.Dataframe
+            Patient screenings
+        """
+        screenings = self.__get_systematic_screenings()
+        screenings['patient_measurement_year_id'] = self.__create_patient_measurement_year_id(screenings['patient_id'],screenings['screening_datetime'])
+        sub2_ids = screenings['patient_measurement_year_id'].isin(self.__populace__['patient_measurement_year_id'])
+        screenings = screenings[sub2_ids].copy()
+        return screenings
+
+    def __merge_sub2_patient_data(self, sub2_pop:pd.DataFrame) -> pd.DataFrame:
+        """
+        Merges in patient demographics
+
+        Returns
+        -------
+        pd.Dataframe
+            Populace
+        """
+        # merge in sex as it's needed for the screening strategy
+        sub2_pop = sub2_pop.merge(self.__DEMOGRAPHICS__[['patient_id','sex']].drop_duplicates(),how='left')
+        return sub2_pop
+
+    def __get_counselings(self) -> pd.DataFrame:
+        """
+        Returns all brief counselings
+
+        Note
+        ----
+        Brief counselings are defined by CPT code 'G2200'
+        """
+        counselings = self.__DATA__.copy()
+        mask = counselings['cpt_code'].map(lambda row: 'G2200' in str(row))
+        counselings = counselings[mask].copy()
+        counselings[['patient_id','encounter_id','encounter_datetime']]
+        return counselings
+
+    def __get_sub2_stratification(self, sub2_ids:pd.Series) -> pd.DataFrame:
+        """
+        Gets the starting submeasure 2 stratification
+
+        Parameters
+        ----------
+        sub2_ids
+            All submeasure 2 partient IDs
+
+        Returns
+        -------
+        pd.Dataframe
+            Initial submeasure 2 stratification
+        """
+        return self.__stratification__[self.__stratification__['patient_id'].isin(sub2_ids)].copy()
+
+
+class _Sub_2(Submeasure):
+    """
+    Percentage of clients who were identified as unhealthy alcohol users and who recieved brief counseling
+    """
+
+    @override
+    def get_submeasure_data(self) -> dict[str:pd.DataFrame]:
+        """
+        Calls all functions of the submeasure
+
+        Returns
+        -------
+        Dictionary[pd.DataFrame:pd.DataFrame]
+            str
+                Name of the data
+            pd.Dataframe
+                Calculated data
+        
+        Raises
+        ------
+        AttributeError
+            When the sub1 data is not set
+        """
+        if not self.__sub1_subset__:
+            raise AttributeError("ASC Sub 2 is a subset of ASC Sub 1. Do not call ASC.__sub2__.get_submeasure_data() directly!")
+        else:
+            return super().get_submeasure_data()
+
+    @override
+    def _set_dataframes(self, dataframes:list[pd.DataFrame]) -> None:
+        """
+        Sets private attributes to the validated dataframes that get used to calculate the submeasure
+
+        Paramaters
+        ----------
+        dataframes
+            List of dataframes
+        """
+        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
+        pass
+    
+    @override
+    def _set_populace(self) -> None:
+        """
+        Sets the initial population for the denominator
+        """
+        self.__initialize_populace()
+        self.__calculate_screening_results()
+        self.__filter_unhealthy_alcohol_users()
+        self.__get_most_recent_screening()
+
+    def __initialize_populace(self) -> None:
+        """
+        Sets populace data from the init's data
+        """
+        self.__populace__ = self.__POPULACE__.copy()
+
+    def __calculate_screening_results(self) -> None:
+        """
+        Calculates if patients are healthy or unhealthy alcohol users
+        """
+        for screener in alcohol_screeners:
+            df = self.__populace__[self.__populace__['screening'] == screener].copy()
+            screening_logic = get_screening_strategy(screener)
+            df['unhealthy_alcohol_use'] = screening_logic(df)
+            df = df[['patient_measurement_year_id','unhealthy_alcohol_use']].copy()
+            self.__populace__ = self.__populace__.combine_first(df)
+
+    def __filter_unhealthy_alcohol_users(self) -> None:
+        """
+        Filters populace to unhealthy alcohol users
+        """
+        self.__populace__ = self.__populace__[self.__populace__['unhealthy_alcohol_use']].copy()
+
+    def __get_most_recent_screening(self) -> None:
+        """
+        Filters populace to the most recent unhealthy screening result
+        """
+        # for patients with multiple screenings, the most recent unhealthty screening should be used 
+        # this is per patient, per measurement year
+        self.__populace__ = self.__populace__.sort_values(['patient_measurement_year_id','screening_datetime'],ascending=True).copy()
+        self.__populace__ = self.__populace__.drop_duplicates('patient_measurement_year_id',keep='last').copy()
+
+    @override
+    def _remove_exclusions(self) -> None:
+        """
+        Removes any exclusions from the population
+        """
+        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
+        pass
+
+    @override
+    def _apply_time_constraint(self) -> None:
+        """
+        Applies time constraints to the denominator populace
+        """
+        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
+        pass
+
+    @override
+    def _find_performance_met(self) -> None:
+        """
+        Checks if patients received brief counseling
+        """
+        counselings = self.__get_counselings()
+        self.__check_counselings(counselings)
+
+    def __get_counselings(self) -> pd.DataFrame:
+        """
+        Returns
+        -------
+        pd.Dataframe
+            Brief counselings
+        """
+        return self.__COUNSELINGS__.copy()
+
+    def __check_counselings(self, counselings:pd.DataFrame) -> None:
+        """
+        Checks if the a counseling happened and how close it was to the screening
+
+        Parameters
+        ----------
+        counselings
+            Brief counselings
+        """
+        # in case the counseling was in the next measurement year use group_by('patient_id')
+        # instead of creating/merging on patient_measurement_year_id for counselings for the reason column
+        # split populace into 2 groups so the groups.get_group(patient_id) doesn't break on patients without counselings
+        groups = counselings.groupby('patient_id')
+        has_counseling = counselings['patient_id'].unique()
+        numerator_candidates = self.__populace__['patient_id'].isin(has_counseling)
+        if numerator_candidates.sum() >= 1:
+            possible_numerators = self.__populace__[numerator_candidates].copy()
+            denominators = self.__populace__[~numerator_candidates].copy()
+            
+            possible_numerators[['counseling_datetime','numerator','numerator_time']] = possible_numerators.apply(lambda row: (pd.Series(self.__create_numerator_values(row,groups.get_group(row['patient_id'])))),axis=1)
+            denominators[['counseling_datetime','numerator','numerator_time']] = [None,False,'Counseling did not happen']
+
+            self.__populace__ = pd.concat([possible_numerators,denominators])
+        else:
+            self.__populace__[['counseling_datetime','numerator','numerator_time']] = [None,False,'Counseling did not happen']
+
+    def __create_numerator_values(self, row:pd.Series, counselings:pd.DataFrame) -> tuple[bool,str]:
+        """
+        Creates a numerator value and an offset of how soon after the counseling happened
+
+        Parameters
+        ----------
+        row
+            Patient screening details
+        counselings
+            Patient screening details
+
+        Returns
+        -------
+        tuple[bool,str]
+            bool
+                Was there a counseling
+            str
+                When was the counseling
+
+        Notes
+        -----
+        Ideally brief counselling should occur at the same encounter (or at the encounter most closely following 
+        the positive screening if it was administered in advance of the visit) but that may not always happen
+
+        The numerator value will only be `True` if the counseling happened on the same day as the screening screening
+        therefore, there is a `reason` column to show if there was a counseling soon after the screening
+        """
+        screening = row['screening_datetime']
+        numerator = False
+        valid_counselings = (counselings['encounter_datetime'][counselings['encounter_datetime'] >= screening])
+        counseling = valid_counselings.min()
+        offset = (counseling - screening).days
+        if offset == 0:
+            numerator = True
+            time_delay = 'Counseling happened immediately'
+        elif offset <= 7:
+            time_delay = 'Counseling happened within a week'
+        elif offset <= 30:
+            time_delay = 'Counseling happened within a month'
+        else:
+            time_delay = 'Counseling did not happen'
+        return counseling, numerator, time_delay
+
+    @override
+    def _set_stratification(self) -> None:
+        """
+        Sets initial population for the stratification
+        """
+        self.__stratification__ = self.__STRATIFICATION__.copy()
+
+    @override
+    def _set_patient_stratification(self) -> None:
+        """
+        Sets stratification data that is patient dependant
+        """
+        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
+        pass
+
+    @override
+    def _set_encounter_stratification(self) -> None:
+        """
+        Sets stratification data that is encounter dependant
+        """
+        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
+        pass
+
+    @override
+    def _fill_blank_stratification(self) -> None:
+        """
+        Fills all blank values in the stratification
+        """
+        # not sure what to do with this b/c sub2 piggy backs off of sub1's final data
+        pass
+
+    @override
+    def _set_final_denominator_data(self) -> None:
+        """
+        Sets all data that is needed and unique to the Submeasure's denominator populace
+        """
+        self.__remove_unneeded_populace_columns()
+        
+    def __remove_unneeded_populace_columns(self) -> None:
+        """
+        Removes all columns that were used to calculate data points 
+        """
+        self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','numerator','numerator_time']].copy()
+
+    @override
+    def _trim_unnecessary_stratification_data(self) -> None:
+        """
+        Removes all data that isn't needed for the Submeasure's stratification
+        """
+        self.__stratification__ = self.__stratification__[self.__stratification__['patient_id'].isin(self.__populace__['patient_id'])].copy()
+
+    @override
+    def _sort_final_data(self) -> None:
+        """
+        Sorts the Populace and Stratification dataframes
+
+        """
+        self.__populace__ = self.__populace__.sort_values('patient_measurement_year_id').copy()
+        self.__stratification__ = self.__stratification__.sort_values('patient_id').copy()
+
+
 class ASC(Measurement):
     """
     The ASC measure calculates the Percentage of clients aged 18 years and older who were
@@ -456,12 +799,12 @@ class ASC(Measurement):
 
     Notes
     -----
-    sub1_data must follow the its `Schema` as defined by the `Validation_Factory` in order to ensure the `submeasure` can run properly
+    sub1_data must follow its `Schema` as defined by the `Validation_Factory` in order to ensure the `submeasure` can run properly
     
     >>> ASC_sub_1 = [
     >>>     "Alcohol_Encounters",
     >>>     "Diagnostic_History",
-    >>>     "Demographic_Data",
+    >>>     "ASC_Demographic_Data",
     >>>     "Insurance_History"
     >>> ]
 
@@ -470,8 +813,8 @@ class ASC(Measurement):
     >>>     "patient_DOB": ("datetime64[ns]",),
     >>>     "encounter_id": (str, 'object'),
     >>>     "encounter_datetime": ("datetime64[ns]",),
-    >>>     "cpt_code": (str, 'object'),
-    >>>     "is_screening": (bool,) 
+    >>>     "screening": (str, 'object'),
+    >>>     "score": (int, float),
     >>> }
     
     >>> Diagnostic_History = {
@@ -480,8 +823,9 @@ class ASC(Measurement):
     >>>     "diagnosis": (str, 'object')
     >>> }
     
-    >>> Demographic_Data = {
+    >>> ASC_Demographic_Data = {
     >>>     "patient_id": (str, 'object'),
+    >>>     "sex": (str, 'object'),
     >>>     "race": (str, 'object'),
     >>>     "ethnicity": (str, 'object')
     >>> }
@@ -493,26 +837,36 @@ class ASC(Measurement):
     >>>     "end_datetime": ("datetime64[ns]",)
     >>> }
 
-    SAMHSA allows for multiple systematic screening methods to be used (AUDIT, AUDIT-C, Single Question Screening),
-    However, this code is currently only able to process AUDIT screenings.
+    SAMHSA allows for multiple systematic screening methods to be used (AUDIT, AUDIT-C, Single Question Screening)
+
+    Submeasure 2 is calculated off of a subset of submeasure 1, so there aren't any parameters for it.
     """
 
     def __init__(self,sub1_data:list[pd.DataFrame]):
         super().__init__("ASC")
-        self.__sub1__: Submeasure = _Sub_1(self.get_name() + "_sub_1",sub1_data)
+        self.__sub1__: Submeasure = _Sub_1(self.get_name() + '_sub_1', sub1_data)
+        self.__sub2__: Submeasure = _Sub_2(self.get_name() + '_sub_2', None)
+        self.__sub2__.__setattr__("__sub1_subset__",False)
 
     @override
     def get_all_submeasures(self) -> dict[str,pd.DataFrame]:
         """
         Calculates all the data for the ASC Measurement and its Submeasures
 
-        Returns:
+        Returns
+        -------
             Dictionary[str,pd.DataFrame]
                 - str: The name of the submeasure data
                 - pd.DataFrame: The data corresponding to that submeasure
         """
         try:
             sub1_results = self.__sub1__.get_submeasure_data()
-            return sub1_results
+            sub2_subset = self.__sub1__._get_sub2_subset()
+            for key,val in sub2_subset.items():
+                self.__sub2__.__setattr__('__'+key+'__',val)
+            self.__sub2__.__setattr__("__sub1_subset__",True)
+            sub2_results = self.__sub2__.get_submeasure_data()
+            full_results = sub1_results | sub2_results
+            return full_results
         except Exception:
             raise

@@ -16,7 +16,14 @@ Alcohol_Encounters = {
     "encounter_id": (str, 'object'),
     "encounter_datetime": ("datetime64[ns]",),
     "cpt_code": (str, 'object'),
-    "is_screening": (bool,) 
+    "screening": (str, 'object'),
+    "score": (int, float),
+}
+ASC_Demographic_Data = {
+    "patient_id": (str, 'object'),
+    "sex": (str, 'object'),
+    "race": (str, 'object'),
+    "ethnicity": (str, 'object')
 }
 Brief_Counselings = {
     "patient_id": (str, 'object'),
@@ -62,5 +69,7 @@ def get_schema(df_name:str) -> dict[str:type]:
             return Insurance_History
         case "Alcohol_Encounters":
             return Alcohol_Encounters
-        case "Brief_Counselings":
-            return Brief_Counselings
+        case "ASC_Demographic_Data":
+            return ASC_Demographic_Data
+        case None:
+            return None

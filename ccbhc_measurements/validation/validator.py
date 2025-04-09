@@ -30,6 +30,10 @@ class Validator:
             OR if any dataframes are missing columns            
             OR if any dataframes have columns not properly formatted
         """
+        # submeasure 2s that are subsets of submeasure 1s don't need validation
+        if dataframes == None:
+            return True, None
+        
         errors = {}
 
         if len(dataframes) != len(self.SCHEMAS):
