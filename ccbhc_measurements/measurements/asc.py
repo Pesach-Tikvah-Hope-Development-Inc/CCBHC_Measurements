@@ -477,6 +477,7 @@ class _Sub_1(Submeasure):
         """
         sub2_pop = self.__initialize_sub2_populace()
         sub2_pop = self.__merge_sub2_patient_data(sub2_pop)
+        sub2_pop = self.__merge_sub2_encounter_data(sub2_pop)
         sub2_pop['screening'] = sub2_pop['screening'].str.lower()
         sub2_pop['sex'] = sub2_pop['sex'].str.lower()
         return sub2_pop
@@ -507,6 +508,19 @@ class _Sub_1(Submeasure):
         """
         # merge in sex as it's needed for the screening strategy
         sub2_pop = sub2_pop.merge(self.__DEMOGRAPHICS__[['patient_id','sex']].drop_duplicates(),how='left')
+        return sub2_pop
+
+    def __merge_sub2_encounter_data(self, sub2_pop:pd.DataFrame) -> pd.DataFrame:
+        """
+        Merges in encounter stratification
+
+        Returns
+        -------
+        pd.Dataframe
+            Populace
+        """
+        # merge in medicaid as it's needed for the government's stratification
+        sub2_pop = sub2_pop.merge(self.__populace__[['patient_measurement_year_id','medicaid']].drop_duplicates(),how='left')
         return sub2_pop
 
     def __get_counselings(self) -> pd.DataFrame:
@@ -767,7 +781,7 @@ class _Sub_2(Submeasure):
         """
         Removes all columns that were used to calculate data points 
         """
-        self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','numerator','numerator_time']].copy()
+        self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','numerator','numerator_time','medicaid']].copy()
 
     @override
     def _trim_unnecessary_stratification_data(self) -> None:
