@@ -135,7 +135,7 @@ insurance_data['start_datetime'] = pd.to_datetime(insurance_data['start_datetime
 insurance_data['end_datetime'] = pd.to_datetime(insurance_data['end_datetime'])
 ```
 
-#### - Step 3: Calculate Dep-Rem
+#### - Step 4: Calculate ASC
 
 ```sh
 submeasure_data = [encounters,diagnosis_data,demographic_data,insurance_data]
