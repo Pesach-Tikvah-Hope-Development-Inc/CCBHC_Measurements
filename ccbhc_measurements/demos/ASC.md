@@ -6,6 +6,7 @@
 - [Required Data](#required-data)
 - [Output Data](#output-data)
 - [Code Demonstration](#code-demonstration)
+- [Notes](#notes)
 
 ## Measurement Definition
 
@@ -19,6 +20,11 @@ last 12 months AND who received brief counseling if identified as an unhealthy a
 
 Percentage of clients aged 18 years and older who were screened for unhealthy alcohol use
 using a Systematic Screening Method at least once within the last 12 months
+
+### SubMeasure 2
+
+Percentage of clients aged 18 years and older who were identified as unhealthy alcohol users
+(in submeasure #1) who received Brief Counseling
 
 ## Required Data
 
@@ -40,7 +46,8 @@ The encounters dataframe must have the following columns and datatypes
 - encounter_id : str - Unique Visit Identifier (duplicates allowed for multiple CPT codes)
 - encounter_datetime : datetime64[ns] - Date of visit
 - cpt_code : str - A single CPT code (for more than one CPT code use separate lines and duplicate the rest of the information)
-- is_screening : bool -  True or False if a screening was included in the encounter
+- screening : str - Type of systemactic screening used or blank if the encounter was not a screening
+- score : int - Sscreening score or blank if the encounter was not a screening
 
 #### Diagnosis
 
@@ -53,6 +60,7 @@ The diagnosis dataframe must have the following columns and datatypes
 
 The demographics dataframe must have the following columns and datatypes
 - patient_id : str - Unique Patient Identifier
+- sex : str - Patient's sex
 - race : str - Patient's race
 - ethnicity : str - Patient's ethnicity
 
@@ -64,11 +72,17 @@ The insurance dataframe must have the following columns and datatypes
 - start_datetime : datetime64[ns] - Start Date of Insurance
 - end_datetime : datetime64[ns] - End Date of Insurance (blanks fill be filled with today)
 
+### SubMeasure 2
+
+SubMeasure 2 is a subset of SubMeasure 1 and can be calculated from the results of SubMeasure 1 and does not need any additional data
+
 ## Output Data
 
 The following dataframes are returned by the ASC Measure
 - ASC_sub_1
 - ASC_sub_1_stratification
+- ASC_sub_2
+- ASC_sub_2_stratification
 
 ### ASC_sub_1
 
@@ -78,8 +92,21 @@ The following dataframes are returned by the ASC Measure
 - numerator - Whether they satisfied the conditions to be included in the numerator
 - medicaid - Whether the patient was on medicaid ONLY at the time of the index visit
 
-
 ### ASC_sub_1_stratification
+
+- patient_id : Unique Patient Identifier
+- ethnicity : Patient's ethnicity
+- race : Patient's race
+
+### ASC_sub_2
+
+- patient_id - Unique Patient Identifier
+- patient_measurement_year_id - An ID created to match patients to their measurement year
+- numerator - Whether they satisfied the conditions to be included in the numerator
+- numerator_time - A time frame after the sreening the counseling happened
+- medicaid - Whether the patient was on medicaid ONLY at the time of the index visit
+
+### ASC_sub_2_stratification
 
 - patient_id : Unique Patient Identifier
 - ethnicity : Patient's ethnicity
@@ -119,13 +146,15 @@ encounters['patient_DOB'] = pd.to_datetime(encounters['patient_DOB'])
 encounters['encounter_id'] = encounters['encounter_id'].astype(str)
 encounters['encounter_datetime'] = pd.to_datetime(encounters['encounter_datetime'])
 encounters['cpt_code'] = encounters['cpt_code'].astype(str)
-encounters['is_screening'] = encounters['is_screening'].astype(bool)
+encounters['screening'] = encounters['screening'].astype(str)
+encounters['score'] = encounters['score'].astype(int)
 
 diagnosis_data['patient_id'] = diagnosis_data['patient_id'].astype(str)
 diagnosis_data['encounter_datetime'] = pd.to_datetime(diagnosis_data['encounter_datetime'])
 diagnosis_data['diagnosis'] = diagnosis_data['diagnosis'].astype(str)
 
 demographic_data['patient_id'] = demographic_data['patient_id'].astype(str)
+demographic_data['sex'] = demographic_data['sex'].astype(str)
 demographic_data['race'] = demographic_data['race'].astype(str)
 demographic_data['ethnicity'] = demographic_data['ethnicity'].astype(str)
 
@@ -149,6 +178,16 @@ for name, data in results.items():
     # any other desired way to save Dataframes
 ```
 
+## Notes
+
+- Systematic Screenings
+    - SAMHSA allows for multiple types of screenings such as AUDIT, AUDIT-C and the Single Question Screening.
+
+- Medicaid
+    - Any patient not included in the medicaid dataframe will be marked as "other" in the final data.
+
+- SubMeasure 2
+    - SubMeasure 2 is a subset of SubMeasure 1 and therefore `ASC.__sub2__.get_submeasure_data()` should not be called before `ASC.__sub1__.get_submeasure_data()`.
 <hr>
 
 [Back to Top](#ccbhc-measurements)
