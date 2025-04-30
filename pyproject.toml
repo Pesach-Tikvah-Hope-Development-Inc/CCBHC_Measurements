@@ -15,6 +15,7 @@ authors = [
 ]
 maintainers = [
     { name = "Alex Gursky", email = "agursky@pesachtikvah.org" },
+    { name = "Max Friedman", email = "mfriedman@pesachtikvah.org" },
     { name = "Yisroel Len", email = "ylen@pesachtikvah.org" }
 ]
 license = {file = 'LICENSE'}

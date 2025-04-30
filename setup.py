@@ -12,8 +12,8 @@ setuptools.setup(
     url="https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements",
     author="Pesach Tikvah Hope Development Inc.",
     author_email="agursky@pesachtikvah.org",
-    maintainer="Alex Gursky, Yisroel Len",
-    maintainer_email="agursky@pesachtikvah.org, ylen@pesachtikvah.org",
+    maintainer="Alex Gursky, Max Friedman, Yisroel Len",
+    maintainer_email="agursky@pesachtikvah.org, mfriedman@pesachtikvah.org, ylen@pesachtikvah.org",
     license="CC BY-NC-SA 4.0",
     project_urls={
         "Source" : "https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements"
