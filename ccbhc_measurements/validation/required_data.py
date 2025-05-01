@@ -1,9 +1,3 @@
-DEP_REM_sub_1 = [
-    "PHQ9",
-    "Diagnostic_History",
-    "Demographic_Data",
-    "Insurance_History"
-]
 ASC_sub_1 = [
     "Alcohol_Encounters",
     "Diagnostic_History",
@@ -13,7 +7,18 @@ ASC_sub_1 = [
 ASC_sub_2 = [
     None
 ]
-
+DEP_REM_sub_1 = [
+    "PHQ9",
+    "Diagnostic_History",
+    "Demographic_Data",
+    "Insurance_History"
+]
+SDOH_sub_1 = [
+    "Populace",
+    "SDOH_Screenings",
+    "Demographic_Data",
+    "Insurance_History"
+]
 
 def get_required_dataframes(submeasure_name: str) -> list[str]:
     """
@@ -35,11 +40,13 @@ def get_required_dataframes(submeasure_name: str) -> list[str]:
         If the submeasure is unknown
     """
     match submeasure_name:
-        case "DEP_REM_sub_1":
-            return DEP_REM_sub_1
         case "ASC_sub_1":
             return ASC_sub_1
         case "ASC_sub_2":
             return ASC_sub_2
+        case "DEP_REM_sub_1":
+            return DEP_REM_sub_1
+        case "SDOH_sub_1":
+            return SDOH_sub_1
     raise ValueError(f"Unknown submeasure: {submeasure_name}")
     

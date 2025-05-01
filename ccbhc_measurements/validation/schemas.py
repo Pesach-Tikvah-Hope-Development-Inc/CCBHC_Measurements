@@ -40,6 +40,17 @@ Insurance_History = {
     "start_datetime": ("datetime64[ns]",),
     "end_datetime": ("datetime64[ns]",)
 }
+SDOH_Screenings = {
+    "patient_id": (str, 'object'),
+    "screening_id": (str, 'object'),
+    "screening_date": ("datetime64[ns]",)
+}
+Populace = {
+    "patient_id": (str, 'object'),
+    "encounter_id": (str, 'object'),
+    "encounter_datetime": ("datetime64[ns]",),  
+    "patient_DOB": ("datetime64[ns]",)         
+}
 
 def get_schema(df_name:str) -> dict[str:type]:
     """
@@ -71,5 +82,9 @@ def get_schema(df_name:str) -> dict[str:type]:
             return Alcohol_Encounters
         case "ASC_Demographic_Data":
             return ASC_Demographic_Data
+        case "SDOH_Screenings":
+            return SDOH_Screenings
+        case "Populace":
+            return Populace
         case None:
             return None
