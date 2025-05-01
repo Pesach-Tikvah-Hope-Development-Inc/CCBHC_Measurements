@@ -38,6 +38,9 @@ We've also created a base Power BI file as a foundation for a dashboard. [Check 
  - **ASC -** Preventive Care and Screening: Unhealthy Alcohol Use: Screening & Brief Counseling 
     - [ASC Detailed Data Input and Output Diagram][ASC Submeasure 1 Detailed Data Input and Output Diagram]
     - [ASC README][SDOH Submeasure 1 README]
+ - **SDOH -** Social Determinants of Health 
+    - [SDOH Detailed Data Input and Output Diagram][SDOH Submeasure 1 Detailed Data Input and Output Diagram]
+    - [SDOH README][SDOH Submeasure 1 README]
 
 The definition for these Measurements can be found at <https://www.samhsa.gov/sites/default/files/ccbhc-quality-measures-technical-specifications-manual.pdf>  
 
@@ -47,6 +50,8 @@ At the moment we only have these Measurements, but we plan on releasing a new Me
 [DEP-REM-6 Submeasure 1 README]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos/DEP-REM.md
 [ASC Submeasure 1 Detailed Data Input and Output Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/ASC%20Input%20Output%20Requirements.pdf
 [ASC Submeasure 1 README]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos/ASC.md
+[SDOH Submeasure 1 Detailed Data Input and Output Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/SDOH%20Input%20Output%20Requirements.pdf
+[SDOH Submeasure 1 README]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos/SDOH.md
 
 ## Code Demonstration
 
