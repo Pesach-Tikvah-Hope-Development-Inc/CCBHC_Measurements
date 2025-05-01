@@ -34,11 +34,10 @@ We've also created a base Power BI file as a foundation for a dashboard. [Check 
 
  - **DEP REM 6 -** Depression Remission at Six Months 
     - [DEP-REM-6 Detailed Data Input and Output Diagram][Dep Rem 6 Diagram]
-    - [DEP-REM-6 Submeasure 1 README][DEP-REM-6 Submeasure 1 README]
- - **ASC Submeasure 1-** Preventive Care and Screening: Unhealthy Alcohol Use: Screening & Brief Counseling 
-    - [ASC Submeasure 1 Detailed Data Input and Output Diagram][ASC Submeasure 1 Detailed Data Input and Output Diagram]
-    - [ASC Submeasure 1 README][ASC Submeasure 1 README]
-
+    - [DEP-REM-6 README][DEP-REM-6 Submeasure 1 README]
+ - **ASC -** Preventive Care and Screening: Unhealthy Alcohol Use: Screening & Brief Counseling 
+    - [ASC Detailed Data Input and Output Diagram][ASC Submeasure 1 Detailed Data Input and Output Diagram]
+    - [ASC README][SDOH Submeasure 1 README]
 
 The definition for these Measurements can be found at <https://www.samhsa.gov/sites/default/files/ccbhc-quality-measures-technical-specifications-manual.pdf>  
 
@@ -51,7 +50,7 @@ At the moment we only have these Measurements, but we plan on releasing a new Me
 
 ## Code Demonstration
 
-This is a demonstration for the Dep-Rem-6 Measurement, see [here](https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos) for more demonstrations
+This is a basic demonstration for the Dep-Rem-6 Measurement, see [here](https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos) for more in depth demonstrations
 
 ```sh
 import pandas as pd
@@ -121,6 +120,7 @@ pip install ccbhc_measurements
 ## Contributors
 
  - Alex Gursky - Data Engineer
+ - Max Friedman - Data Engineer
  - Yisroel Len - Director of Data Analytics & CCBHC Project Evaluator
 
 ## Contributions and Discussions
