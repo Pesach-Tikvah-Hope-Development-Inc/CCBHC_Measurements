@@ -13,7 +13,7 @@ class _Sub_1(Submeasure):
     """
 
     @override
-    def _set_dataframes(self, dataframes: list[pd.DataFrame]) -> None:
+    def _set_dataframes(self, dataframes:list[pd.DataFrame]) -> None:
         """
         Sets private attributes to the validated dataframes that get used to calculate the submeasure
 
@@ -69,7 +69,7 @@ class _Sub_1(Submeasure):
 
         Returns
         -------
-        str
+        pd.Series
             patient_measurement_year_id
         """
         return ids + '-' + (dates.dt.year).astype(str)
@@ -295,7 +295,7 @@ class _Sub_1(Submeasure):
         Returns
         -------
         pd.Dataframe
-            medicaid_data with a new column for medicaid stratification
+            Medicaid_data with a new column for medicaid stratification
         """
         medicaid_data['medicaid'] = self.__find_plans_with_medicaid(medicaid_data['insurance'])
         medicaid_data['medicaid'] = self.__replace_medicaid_values(medicaid_data['medicaid'])

@@ -13,7 +13,7 @@ class _Sub_1(Submeasure):
     """
 
     @override
-    def _set_dataframes(self, dataframes: list[pd.DataFrame]) -> None:
+    def _set_dataframes(self, dataframes:list[pd.DataFrame]) -> None:
         """
         Sets private attributes to the validated dataframes that get used to calculate the submeasure
 
@@ -83,7 +83,7 @@ class _Sub_1(Submeasure):
 
         Returns
         -------
-        str
+        pd.Series
             patient_measurement_year_id
         """
         return ids + '-' + (dates.dt.year).astype(str)
