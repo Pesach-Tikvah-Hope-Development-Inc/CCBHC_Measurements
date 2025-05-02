@@ -16,6 +16,7 @@
 The goal of this package is to simplify the process for calculating CCBHC measurements for all CCBHCs. It does this by taking in all the relevant data for a measurement and outputing whether the data meets the measurements' criteria. Here's the DEP-REM-6 as an example:
 
 ![simple example of how the package works](https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/Simple%20CCBHC_Measurements%20Example.png?raw=true)
+
 [Click here for the more detailed DEP-REM-6 example pdf][Dep Rem 6 Diagram]
 
 ### 1. Data Processing
