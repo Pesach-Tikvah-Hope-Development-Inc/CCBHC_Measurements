@@ -48,6 +48,7 @@ class Submeasure(Denominator,Numerator,Stratification):
             self._set_dataframes(dataframes)
         self.__populace__:pd.DataFrame = None
         self.__stratification__:pd.DataFrame = None
+        self.__is_calculated__ = False
 
     def get_name(self) -> str:
         """
@@ -113,17 +114,17 @@ class Submeasure(Denominator,Numerator,Stratification):
         """
         pass
 
-    def get_submeasure_data(self) -> dict[pd.DataFrame:pd.DataFrame]:
+    def get_submeasure_data(self) -> dict[str:pd.DataFrame]:
         """
         Calls all functions of the submeasure
 
         Returns
         -------
-        dict[pd.DataFrame:pd.DataFrame]
+        Dictionary[pd.DataFrame:pd.DataFrame]
+            str
+                Name of the data
             pd.Dataframe
-                Calculated populace data
-            pd.Dataframe
-                Calculated stratified data
+                Calculated data
         
         Raises
         ------
@@ -203,6 +204,7 @@ class Submeasure(Denominator,Numerator,Stratification):
             self._set_final_denominator_data()
             self._trim_unnecessary_stratification_data()
             self._sort_final_data()
+            self.__is_calculated__ = True
             return {
                 self.get_name() : self.__populace__.copy(),
                 self.get_name() + '_stratification' : self.__stratification__.copy()
@@ -224,7 +226,7 @@ class Submeasure(Denominator,Numerator,Stratification):
     @abstractmethod
     def _trim_unnecessary_stratification_data(self) -> None:
         """
-        Removes all data that isn't needed to calculate the Submeasure's stratification
+        Removes all data that isn't needed for the Submeasure's stratification
 
         This method must be implemented by the concrete class 
         to define how the stratification data is trimmed
@@ -240,3 +242,9 @@ class Submeasure(Denominator,Numerator,Stratification):
         to define how the dataframes is trimmed
         """
         pass
+
+    def __str__(self) -> str:
+        if not self.__is_calculated__:
+            return f'{self.__NAME__} has not been calculated'
+        return f'{self.__NAME__} has a denominator of {len(self.__populace__)} and a numerator of {len(self.__populace__[self.__populace__['numerator']])}'
+    
