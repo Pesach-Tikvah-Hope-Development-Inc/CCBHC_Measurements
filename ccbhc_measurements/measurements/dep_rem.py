@@ -395,7 +395,7 @@ class _Sub_1(Submeasure):
         """
         Removes all columns that were used to calculate data points 
         """
-        self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','age','encounter_id','numerator','numerator_reason']].drop_duplicates()
+        self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','encounter_id','numerator','numerator_reason','age','medicaid']].drop_duplicates()
 
     @override
     def _trim_unnecessary_stratification_data(self) -> None:
