@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ccbhc_measurements"
 description = "An easy way to calculate CCBHC measurements."
-version = "2025.5.1.post"
+version = "2025.5.8"
 readme = "README.md"
 authors = [
     { name = "Pesach Tikvah Hope Development Inc.", email = "agursky@pesachtikvah.org" }

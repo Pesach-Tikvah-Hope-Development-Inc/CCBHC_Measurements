@@ -107,7 +107,8 @@ class _Sub_1(Submeasure):
         """
         exclusions = self.__get_all_exclusions()
         self.__determine_exclusion_date_range()
-        self.__compare_exclusions_with_range(exclusions)
+        exclusions = self.__compare_exclusions_with_range(exclusions)
+        self.__filter_out_exclusions(exclusions)
 
     def __get_all_exclusions(self) -> pd.DataFrame:
         """
@@ -148,20 +149,38 @@ class _Sub_1(Submeasure):
                                                                                 (visit['encounter_datetime'] + pd.DateOffset(months=6) + pd.DateOffset(days=60)).day
                                                                             ).date() ,axis=1)
 
-    def __compare_exclusions_with_range(self, exclusions:pd.DataFrame) -> None:
+    def __compare_exclusions_with_range(self, exclusions:pd.DataFrame) -> list:
         """
-        Filters out index visits with exclusions that occured during the exclusion range
+        Finds patient measurement year ids with exclusions that occured during the exclusion range
 
         Paramaters
         ----------
         exclusions
             Encounters with a diagnosis that invalidates them from the submeasure
+        
+        Returns
+        -------
+        list
+            Patient measurement year ids
         """
         # a visit is only excluded if the exclusion happened before the index visit's remission year/range
         # therefore it's needed to filter the exclusions to only the ones that occured durring that period
         exclusions.rename(columns={'encounter_datetime':'exclusion_date'},inplace=True)
         self.__index_visits__ = self.__index_visits__.merge(exclusions,how ='left', on='patient_id')
-        self.__index_visits__ = self.__index_visits__[(self.__index_visits__['exclusion_date'] >= self.__index_visits__['end_exclusion_range']) | (self.__index_visits__['exclusion_date'].isna())].copy() # keeps index visits with (exclusions AFTER the exclusion range) OR (no exclusion date)
+        exclusion_ids = self.__index_visits__[self.__index_visits__['exclusion_date'] <= self.__index_visits__['end_exclusion_range']]['patient_measurement_year_id'].drop_duplicates().to_list()
+        return exclusion_ids
+
+    def __filter_out_exclusions(self, exclusions:list) -> None:
+        """
+        Filters out all index groups from populace that have a valid exclusion 
+
+        Parameters
+        ----------
+        exclusions
+            Patient measurement year ids to exclude
+        """
+        self.__index_visits__['exclusion'] = self.__index_visits__['patient_measurement_year_id'].isin(exclusions) # check if the patient_measurement_year_id is in the exclusion list
+        self.__index_visits__ = self.__index_visits__[~self.__index_visits__['exclusion']].copy() # filter out all invalid visits
 
     @override
     def _apply_time_constraint(self) -> None:
@@ -234,6 +253,12 @@ class _Sub_1(Submeasure):
         """
         self.__set_patient_demographics()
         
+    def __set_patient_demographics(self) -> None:
+        """
+        Merges DEMOGRAPHICS into stratification
+        """
+        self.__stratification__ = self.__stratification__.merge(self.__DEMOGRAPHICS__,how='left')
+
     @override
     def _set_encounter_stratification(self) -> None:
         """
@@ -246,13 +271,7 @@ class _Sub_1(Submeasure):
         """
         Resets the age val to the age group 
         """
-        self.__stratification__['age'] = self.__stratification__['age'].apply(lambda age: '18+' if age >= 18 else '12-18')
-
-    def __set_patient_demographics(self) -> None:
-        """
-        Merges DEMOGRAPHICS into stratification
-        """
-        self.__stratification__ = self.__stratification__.merge(self.__DEMOGRAPHICS__,how='left')
+        self.__populace__['age'] = self.__populace__['age'].apply(lambda age: '18+' if age >= 18 else '12-18')
 
     def __set_insurance_data(self) -> None:
         """
@@ -302,7 +321,7 @@ class _Sub_1(Submeasure):
         medicaid_data = self.__find_patients_with_only_medicaids(medicaid_data)
         return medicaid_data
 
-    def __find_plans_with_medicaid(self,plan:pd.Series) -> pd.Series:
+    def __find_plans_with_medicaid(self, plan:pd.Series) -> pd.Series:
         """
         Checks if the insurance name contains medicaid
         
@@ -334,7 +353,7 @@ class _Sub_1(Submeasure):
         """
         return col.map({True:1,False:2})
 
-    def __find_patients_with_only_medicaids(self,medicaid_data:pd.DataFrame) -> pd.DataFrame:
+    def __find_patients_with_only_medicaids(self, medicaid_data:pd.DataFrame) -> pd.DataFrame:
         """
         Calcutlates whether a patient has medicaid only or other insurance
         
@@ -363,25 +382,25 @@ class _Sub_1(Submeasure):
         """
         Sets the populace data to the unique data points that are needed for the denominator
         """
-        self.__remove_unneeded_populace_columns()
         self.__add_in_stratification_columns()
-
-    def __remove_unneeded_populace_columns(self) -> None:
-        """
-        Removes all columns that were used to calculate data points 
-        """
-        self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','encounter_id','numerator','numerator_reason']].drop_duplicates()
+        self.__remove_unneeded_populace_columns()
 
     def __add_in_stratification_columns(self) -> None:
         """
         Merges in stratification columns that are unique to the measurement year
         """
-        self.__populace__ = pd.merge(self.__populace__,self.__stratification__[['patient_measurement_year_id','age','medicaid']])
+        self.__populace__ = pd.merge(self.__populace__,self.__stratification__[['patient_measurement_year_id','medicaid']])
+
+    def __remove_unneeded_populace_columns(self) -> None:
+        """
+        Removes all columns that were used to calculate data points 
+        """
+        self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','age','encounter_id','numerator','numerator_reason']].drop_duplicates()
 
     @override
     def _trim_unnecessary_stratification_data(self) -> None:
         """
-        Removes all data that isn't needed to calculate the Submeasure's stratification 
+        Removes all data that isn't needed for the Submeasure's stratification 
         """
         self.__stratification__ = self.__stratification__[['patient_id','ethnicity','race']].drop_duplicates()
 
@@ -443,7 +462,7 @@ class Dep_Rem(Measurement):
     >>> }
     """
 
-    def __init__(self,sub1_data:list[pd.DataFrame]):
+    def __init__(self, sub1_data:list[pd.DataFrame]):
         super().__init__("DEP_REM")
         self.__sub1__: Submeasure = _Sub_1(self.get_name() + "_sub_1",sub1_data)
     
