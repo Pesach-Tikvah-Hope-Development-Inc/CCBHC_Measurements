@@ -1,8 +1,6 @@
 from ccbhc_measurements.validation.validator import Validator
 from ccbhc_measurements.validation.schemas import get_schema
 from ccbhc_measurements.validation.required_data import get_required_dataframes
-    
-
 
 @staticmethod
 def build(submeasure_name: str) -> Validator:

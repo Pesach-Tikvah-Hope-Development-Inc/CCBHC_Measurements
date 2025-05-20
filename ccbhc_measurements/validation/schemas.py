@@ -51,6 +51,12 @@ Populace = {
     "encounter_datetime": ("datetime64[ns]",),  
     "patient_DOB": ("datetime64[ns]",)         
 }
+CDF_Screenings = {
+    "patient_id": (str, 'object'),
+    "encounter_id": (str, 'object'),
+    "screening_date": ("datetime64[ns]",),
+    "total_score": (int, float),
+}
 
 def get_schema(df_name:str) -> dict[str:type]:
     """
@@ -86,5 +92,7 @@ def get_schema(df_name:str) -> dict[str:type]:
             return SDOH_Screenings
         case "Populace":
             return Populace
+        case "CDF_Screenings":
+            return CDF_Screenings
         case None:
             return None
