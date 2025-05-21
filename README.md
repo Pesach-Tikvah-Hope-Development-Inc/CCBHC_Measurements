@@ -13,7 +13,7 @@
 
 ## Purpose
 
-The goal of this package is to simplify the process for calculating CCBHC measurements for all CCBHCs. It does this by taking in all the relevant data for a measurement and outputing whether the data meets the measurements' criteria. Here's the DEP-REM-6 as an example:
+This package is designed to simplify CCBHC reporting by automating the measurement process. It accepts all relevant clinical —such as PHQ-9s, AUDITs, and SDOH screenings— and insurance data and returns a labeled DataFrame indicating whether each patient meets the criteria for the chosen CCBHC measurements. The package is designed to be comprehensive in that you can give it ALL your historical data and it will output EVERY patient labeled in EVERY Measurement Year for a given Measurement. Take a look at this DEP-REM-6 example:
 
 ![simple example of how the package works](https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/Simple%20CCBHC_Measurements%20Example.png?raw=true)
 
@@ -42,10 +42,16 @@ We've also created a base Power BI file as a foundation for a dashboard. [Check 
  - **SDOH -** Social Determinants of Health 
     - [SDOH Detailed Data Input and Output Diagram][SDOH Submeasure 1 Detailed Data Input and Output Diagram]
     - [SDOH README][SDOH Submeasure 1 README]
+ - **CDF-AD -** Clinical Depression & Follow up
+    - Coming soon!
+ - **CDF-CH -** Clinical Depression & Follow up
+    - Coming soon!
 
 The definition for these Measurements can be found at <https://www.samhsa.gov/sites/default/files/ccbhc-quality-measures-technical-specifications-manual.pdf>  
 
-At the moment we only have these Measurements, but we plan on releasing a new Measurement every two weeks.
+**IMPORTANT** We will **NOT** be implementing the I-SERV Measurements as it just calculates the average number of days between the initial evaluation or first clinical service and the date of the call across all patients with little exclusions. If the data is structured correctly, this calculation can be performed easily as needed.
+
+Moving forward, our focus will shift from the SAMHSA-required measurements to those mandated by New York State.
 
 [Dep Rem 6 Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/DEP%20REM%20Input-Output%20Example.pdf
 [DEP-REM-6 Submeasure 1 README]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos/DEP-REM.md
