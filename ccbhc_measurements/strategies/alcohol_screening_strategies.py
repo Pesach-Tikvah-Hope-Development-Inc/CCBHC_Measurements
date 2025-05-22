@@ -1,6 +1,6 @@
-from abc import ABC, abstractmethod
-from typing import override
 import pandas as pd
+from abc import ABC, abstractmethod
+from ccbhc_measurements.compat.typing_compat import override
 
 class Screening_Strategy(ABC):
     @abstractmethod

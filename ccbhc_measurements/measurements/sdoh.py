@@ -1,6 +1,6 @@
-from typing import override
-from datetime import datetime
 import pandas as pd
+from datetime import datetime
+from ccbhc_measurements.compat.typing_compat import override
 from ccbhc_measurements.abstractions.submeasure import Submeasure
 from ccbhc_measurements.abstractions.measurement import Measurement
 

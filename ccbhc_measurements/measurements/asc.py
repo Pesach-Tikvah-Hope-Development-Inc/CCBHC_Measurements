@@ -1,7 +1,7 @@
-from dateutil.relativedelta import relativedelta
-from typing import override
-from datetime import datetime
 import pandas as pd
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+from ccbhc_measurements.compat.typing_compat import override
 from ccbhc_measurements.abstractions.measurement import Measurement
 from ccbhc_measurements.abstractions.submeasure import Submeasure
 from ccbhc_measurements.strategies.alcohol_screening_strategies import alcohol_screeners, get_screening_strategy
@@ -869,9 +869,11 @@ class ASC(Measurement):
 
         Returns
         -------
-            Dictionary[str,pd.DataFrame]
-                - str: The name of the submeasure data
-                - pd.DataFrame: The data corresponding to that submeasure
+        Dictionary[str,pd.DataFrame]
+            str
+                The name of the submeasure data
+            pd.DataFrame
+                The data corresponding to that submeasure
         """
         try:
             sub1_results = self.__sub1__.get_submeasure_data()

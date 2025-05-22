@@ -1,12 +1,10 @@
+import logging
+import pandas as pd
 from abc import abstractmethod
-
 from ccbhc_measurements.abstractions.denominator import Denominator
 from ccbhc_measurements.abstractions.numerator import Numerator
 from ccbhc_measurements.abstractions.stratification import Stratification
-
 from ccbhc_measurements.validation.validation_factory import build
-import logging
-import pandas as pd
 
 class Submeasure(Denominator,Numerator,Stratification):
     """
