@@ -29,7 +29,6 @@ DEP_REM_sub_1 = [
 ]
 SDOH_sub_1 = [
     "Populace",
-    "SDOH_Screenings",
     "Demographic_Data",
     "Insurance_History"
 ]

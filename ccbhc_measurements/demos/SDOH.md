@@ -27,7 +27,6 @@ Percentage of clients aged 18 years and older who were screened for social drive
 The following dataframes are required to calculate the SDOH SubMeasure 1:
 
 - Populace  
-- Screenings  
 - Demographic Data  
 - Insurance History  
 
@@ -38,14 +37,7 @@ Populace must have the following columns and datatypes:
 - patient_DOB : datetime64[ns] — Patient's Date of Birth  
 - encounter_id : str — Unique Visit Identifier  
 - encounter_datetime : datetime64[ns] — Date of Qualifying Encounter 
-
-#### SDOH_Screenings
-
-The SDOH_Screenings dataframe must have the following columns and datatypes:
-
-- patient_id : str — Unique Patient Identifier  
-- screening_id : str — Unique Screening Identifier (Encounter ID where screening was documented)  
-- screening_date : datetime64[ns] — Date the screening was administered  
+- is_sdoh : bool — Whether that encounter was an SDOH screening  
 
 
 #### Demographic_Data
@@ -101,15 +93,13 @@ import ccbhc_measurements as ccbhc
 ```sh
 all_inclusive_excel_file = r"../file/path/to/SDOH Sub 1 Data.xlsx"
 populace = pd.read_excel(all_inclusive_excel_file, sheet_name="populace")
-screenings = pd.read_excel(all_inclusive_excel_file, sheet_name="sdoh_screenings")
 demographics = pd.read_excel(all_inclusive_excel_file, sheet_name="demographic_data")
 insurance = pd.read_excel(all_inclusive_excel_file, sheet_name="insurance_history")
 ```
 #### - Step 2: Ensure that the dataframes have the correct columns
 
 ```sh
-populace = populace[["patient_id", "patient_DOB", "encounter_id","encounter_datetime"]].copy()
-screenings = screenings[["patient_id", "screening_id", "screening_date"]].copy()
+populace = populace[["patient_id", "patient_DOB", "encounter_id","encounter_datetime","is_sdoh"]].copy()
 demographics = demographics[["patient_id", "race", "ethnicity"]].copy()
 insurance = insurance[["patient_id", "insurance", "start_datetime", "end_datetime"]].copy()
 ```
@@ -121,10 +111,8 @@ populace["patient_id"] = populace["patient_id"].astype(str)
 populace["patient_DOB"] = pd.to_datetime(populace["patient_DOB"])
 populace["encounter_id"] = populace["encounter_id"].astype(str)
 populace["encounter_datetime"] = pd.to_datetime(populace["encounter_datetime"])
+populace["is_sdoh"] = populace["is_sdoh"].astype(bool)
 
-screenings["patient_id"] = screenings["patient_id"].astype(str)
-screenings["screening_id"] = screenings["screening_id"].astype(str)
-screenings["screening_date"] = pd.to_datetime(screenings["screening_date"])
 
 demographics["patient_id"] = demographics["patient_id"].astype(str)
 demographics["race"] = demographics["race"].astype(str)
@@ -139,7 +127,7 @@ insurance["end_datetime"] = pd.to_datetime(insurance["end_datetime"])
 #### - Step 4: Calculate SDOH
 
 ```sh
-submeasure_data = [populace, screenings, demographics, insurance]
+submeasure_data = [populace, demographics, insurance]
 measure = ccbhc.SDOH(submeasure_data)
 results = measure.get_all_submeasures()
 for name, data in results.items():

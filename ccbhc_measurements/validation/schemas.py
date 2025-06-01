@@ -1,15 +1,3 @@
-PHQ9 = {
-    "patient_id": (str, 'object'),
-    "patient_DOB": ("datetime64[ns]",),
-    "encounter_id": (str, 'object'),
-    "encounter_datetime": ("datetime64[ns]",),
-    "total_score": (int, float)
-}
-Diagnostic_History = {
-    "patient_id": (str, 'object'),
-    "encounter_datetime": ("datetime64[ns]",),
-    "diagnosis": (str, 'object')
-}
 Alcohol_Encounters = {
     "patient_id": (str, 'object'),
     "patient_DOB": ("datetime64[ns]",),
@@ -29,10 +17,21 @@ Brief_Counselings = {
     "patient_id": (str, 'object'),
     "encounter_id": (str, 'object')
 }
+CDF_Screenings = {
+    "patient_id": (str, 'object'),
+    "encounter_id": (str, 'object'),
+    "screening_date": ("datetime64[ns]",),
+    "total_score": (int, float),
+}
 Demographic_Data = {
     "patient_id": (str, 'object'),
     "race": (str, 'object'),
     "ethnicity": (str, 'object')
+}
+Diagnostic_History = {
+    "patient_id": (str, 'object'),
+    "encounter_datetime": ("datetime64[ns]",),
+    "diagnosis": (str, 'object')
 }
 Insurance_History = {
     "patient_id": (str, 'object'),
@@ -40,10 +39,12 @@ Insurance_History = {
     "start_datetime": ("datetime64[ns]",),
     "end_datetime": ("datetime64[ns]",)
 }
-SDOH_Screenings = {
+PHQ9 = {
     "patient_id": (str, 'object'),
-    "screening_id": (str, 'object'),
-    "screening_date": ("datetime64[ns]",)
+    "patient_DOB": ("datetime64[ns]",),
+    "encounter_id": (str, 'object'),
+    "encounter_datetime": ("datetime64[ns]",),
+    "total_score": (int, float)
 }
 Populace = {
     "patient_id": (str, 'object'),
@@ -51,11 +52,10 @@ Populace = {
     "encounter_datetime": ("datetime64[ns]",),  
     "patient_DOB": ("datetime64[ns]",)         
 }
-CDF_Screenings = {
+SDOH_Screenings = {
     "patient_id": (str, 'object'),
-    "encounter_id": (str, 'object'),
-    "screening_date": ("datetime64[ns]",),
-    "total_score": (int, float),
+    "screening_id": (str, 'object'),
+    "screening_date": ("datetime64[ns]",)
 }
 
 def get_schema(df_name:str) -> dict[str:type]:

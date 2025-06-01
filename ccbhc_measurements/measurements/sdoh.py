@@ -18,17 +18,16 @@ class _Sub_1(Submeasure):
 
         Parameters
         ----------
-        dataframes : list of pd.DataFrame
-            A list of dataframes in the following order:
+        dataframes
+            A list of dataframes in the following order
             0 - SDOH_Populace
             1 - SDOH_Screenings
             2 - Demographic_Data
             3 - Insurance_History
         """
         self.__DATA__ = dataframes[0].copy()
-        self.__SCREENINGS__ = dataframes[1].copy()
-        self.__DEMOGRAPHICS__ = dataframes[2].copy()
-        self.__INSURANCE__ = dataframes[3].copy()
+        self.__DEMOGRAPHICS__ = dataframes[1].copy()
+        self.__INSURANCE__ = dataframes[2].copy()
 
     @override
     def get_populace_dataframe(self) -> pd.DataFrame:
@@ -132,44 +131,55 @@ class _Sub_1(Submeasure):
         """
         try:
             self._find_performance_met()
-            self._apply_time_constraint()
+            # self._apply_time_constraint()
         except Exception:
             raise ValueError("Failed to calculate numerator")
 
     @override
     def _find_performance_met(self) -> None:
         """
-        Finds the performance met for the SDOH measure
+        Derive last SDOH encounter via helper methods, then apply the time constraint
         """
-        try:
-            screenings = self.__get_screenings()
-            screenings["patient_measurement_year_id"] = self.__create_measurement_year_id(
-                screenings["patient_id"], screenings["screening_date"]
-            )
-            screenings = self.__get_last_screening(screenings)
-            self.__merge_screenings_into_populace(screenings)
-        except Exception:
-            raise
+        screenings = self.__get_screenings()
+        last       = self.__get_last_screening(screenings)
+        self.__merge_screenings_into_populace(last)
+        self._apply_time_constraint()    
 
     def __get_screenings(self) -> pd.DataFrame:
-        """ 
-        Gets the screenings data
         """
-        return self.__SCREENINGS__.copy()
+        Build the table of all TRUE isSDOH encounters from __DATA__
+        """
+        full = self.__DATA__.copy()
+        full['patient_measurement_year_id'] = self.__create_measurement_year_id(
+            full['patient_id'], full['encounter_datetime']
+        )
+        return (
+            full.loc[full['is_sdoh'],
+                     ['patient_measurement_year_id','encounter_id','encounter_datetime']]
+                .rename(columns={
+                    'encounter_id':       'screening_id',
+                    'encounter_datetime': 'screening_date'
+                })
+        )
 
-    def __get_last_screening(self, screenings:pd.DataFrame) -> None:
+    def __get_last_screening(self, screenings: pd.DataFrame) -> pd.DataFrame:
         """
-        Gets the last screening date for patients
+        From the screening table, pick the most recent per patient-year
         """
-        return screenings.sort_values(by=['screening_date'], ascending=False).drop_duplicates(['patient_measurement_year_id'], keep='first')
+        return (
+            screenings
+              .sort_values('screening_date', ascending=False)
+              .drop_duplicates('patient_measurement_year_id', keep='first')
+        )
 
-    def __merge_screenings_into_populace(self, screenings:pd.DataFrame) -> None:
+    def __merge_screenings_into_populace(self, last: pd.DataFrame) -> None:
         """
-        Merge screenings into populace
+        Left join the last screening_id and screening_date back into __populace__
         """
         self.__populace__ = self.__populace__.merge(
-            screenings[["screening_id", "screening_date", "patient_measurement_year_id"]],
-            how="left",
+            last[['patient_measurement_year_id','screening_id','screening_date']],
+            on='patient_measurement_year_id',
+            how='left'
         )
 
     @override
@@ -317,7 +327,7 @@ class _Sub_1(Submeasure):
         Paramaters
         ----------
         col
-            Is insurance medicaid
+            Boolean represnting if insurance is medicaid
 
         Returns
         -------
@@ -361,7 +371,7 @@ class _Sub_1(Submeasure):
         """ 
         Removes all columns that were used to calculate data points
         """
-        self.__populace__ = self.__populace__[['patient_id', 'patient_measurement_year_id', 'numerator', 'screening_id', 'screening_date', 'medicaid']].drop_duplicates(subset='patient_measurement_year_id')
+        self.__populace__ = self.__populace__[['patient_measurement_year_id', 'patient_id', 'numerator', 'screening_id', 'screening_date', 'medicaid']].drop_duplicates(subset='patient_measurement_year_id')
 
     @override
     def _trim_unnecessary_stratification_data(self) -> None:
@@ -423,9 +433,9 @@ class SDOH(Measurement):
     >>> }
     """
 
-    def __init__(self,sub1_data:list[pd.DataFrame]):
+    def __init__(self, sub1_data:list[pd.DataFrame]):
         super().__init__("SDOH")
-        self.__sub1__: Submeasure = _Sub_1(self.get_name() + "_sub_1",sub1_data)
+        self.__sub1__: Submeasure = _Sub_1(self.get_name() + "_sub_1", sub1_data)
 
     @override
     def get_all_submeasures(self) -> dict[str:pd.DataFrame]:
