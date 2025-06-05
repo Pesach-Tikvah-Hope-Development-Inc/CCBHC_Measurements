@@ -92,9 +92,6 @@ screening_data['screening_date'] = pd.to_datetime(screening_data['screening_date
 screening_data['patient_id'] = [str(1001 + i) for i in range(len(screening_data))]
 
 # Demographic_Data 
-#   "patient_id": (str, 'object'),
-#   "race": (str, 'object'),
-#   "ethnicity": (str, 'object')
 demographic_races = random.choices(races, k=pop_size)
 demographic_ethnicities = random.choices(ethnicities, k=pop_size)
 demographic_data = pd.DataFrame({
