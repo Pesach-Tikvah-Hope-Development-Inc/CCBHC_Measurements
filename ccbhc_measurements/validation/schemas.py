@@ -13,16 +13,6 @@ ASC_Demographic_Data = {
     "race": (str, 'object'),
     "ethnicity": (str, 'object')
 }
-Brief_Counselings = {
-    "patient_id": (str, 'object'),
-    "encounter_id": (str, 'object')
-}
-CDF_Screenings = {
-    "patient_id": (str, 'object'),
-    "encounter_id": (str, 'object'),
-    "screening_date": ("datetime64[ns]",),
-    "total_score": (int, float),
-}
 Demographic_Data = {
     "patient_id": (str, 'object'),
     "race": (str, 'object'),
@@ -92,7 +82,5 @@ def get_schema(df_name:str) -> dict[str:type]:
             return SDOH_Screenings
         case "Populace":
             return Populace
-        case "CDF_Screenings":
-            return CDF_Screenings
         case None:
             return None

@@ -43,20 +43,26 @@ We've also created a base Power BI file as a foundation for a dashboard. [Check 
     - [SDOH Detailed Data Input and Output Diagram][SDOH Submeasure 1 Detailed Data Input and Output Diagram]
     - [SDOH README][SDOH Submeasure 1 README]
  - **CDF-AD -** Clinical Depression & Follow up
-    - Coming soon!
+    - [CDF-AD Detailed Data Input and Output Diagram][CDF-AD Submeasure 1 Detailed Data Input and Output Diagram]
+    - [CDF-AD README][CDF-AD Submeasure 1 README]
  - **CDF-CH -** Clinical Depression & Follow up
-    - Coming soon!
+    - [CDF-CH Detailed Data Input and Output Diagram][CDF-CH Submeasure 1 Detailed Data Input and Output Diagram]
+    - [CDF-CH README][CDF-CH Submeasure 1 README]
 
 The definition for these Measurements can be found at <https://www.samhsa.gov/sites/default/files/ccbhc-quality-measures-technical-specifications-manual.pdf>  
 
-**IMPORTANT** We will **NOT** be implementing the I-SERV Measurements as it just calculates the average number of days between the initial evaluation or first clinical service and the date of the call across all patients with little exclusions. If the data is structured correctly, this calculation can be performed easily as needed.
+**IMPORTANT** We unsure if we will be implementing the I-SERV Measurement and its SubMeasures. We would like to hear your thoughts on the matter, feel free to email us and let us know what you think.
 
 Moving forward, our focus will shift from the SAMHSA-required measurements to those mandated by New York State.
 
-[Dep Rem 6 Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/DEP%20REM%20Input-Output%20Example.pdf
-[DEP-REM-6 Submeasure 1 README]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos/DEP-REM.md
 [ASC Submeasure 1 Detailed Data Input and Output Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/ASC%20Input%20Output%20Requirements.pdf
 [ASC Submeasure 1 README]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos/ASC.md
+[CDF-AD Submeasure 1 Detailed Data Input and Output Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/CDF%20AD%20Input%20Output%20Requirements.pdf
+[CDF-AD Submeasure 1 README]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos/CDF-AD.md
+[CDF-CH Submeasure 1 Detailed Data Input and Output Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/CDF%20CH%20Input%20Output%20Requirements.pdf
+[CDF-CH Submeasure 1 README]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos/CDF-CH.md
+[Dep Rem 6 Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/DEP%20REM%20Input-Output%20Example.pdf
+[DEP-REM-6 Submeasure 1 README]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos/DEP-REM.md
 [SDOH Submeasure 1 Detailed Data Input and Output Diagram]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/SDOH%20Input%20Output%20Requirements.pdf
 [SDOH Submeasure 1 README]:https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/demos/SDOH.md
 

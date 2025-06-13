@@ -18,18 +18,16 @@ class _Sub_1(Submeasure):
 
         Parameters
         ----------
-        dataframse
+        dataframes
             0 - Populace
             1 - Diagnoses
-            2 - Screenings
-            3 - Demographics
-            4 - Insurance
+            2 - Demographics
+            3 - Insurance
         """
         self.__DATA__ = dataframes[0].copy() 
         self.__DIAGNOSIS__ = dataframes[1].copy()
-        self.__SCREENINGS__ = dataframes[2].copy()
-        self.__DEMOGRAPHICS__ = dataframes[3].copy()
-        self.__INSURANCE__ = dataframes[4].copy()
+        self.__DEMOGRAPHICS__ = dataframes[2].copy()
+        self.__INSURANCE__ = dataframes[3].copy()
 
     @override
     def get_populace_dataframe(self) -> pd.DataFrame:
@@ -46,12 +44,12 @@ class _Sub_1(Submeasure):
     @override
     def get_stratify_dataframe(self) -> pd.DataFrame: 
         """
-        Gets the stratify dataframe 
+        Gets the stratification dataframe 
 
         Returns 
         -------
         pd.DataFrame
-            The stratify dataframe
+            The stratification dataframe
         """
         return self.__stratification__.copy()
     
@@ -61,7 +59,7 @@ class _Sub_1(Submeasure):
         Sets all possible eligible clients for the denominator
         """
         self.__initialize_populace()
-        self.__populace__['patient_measurement_year_id'] = self.__create_measurement_year_id(self.__populace__['patient_id'],self.__populace__['encounter_datetime'])
+        self.__populace__['patient_measurement_year_id'] = self.__create_measurement_year_id(self.__populace__['patient_id'], self.__populace__['encounter_datetime'])
         self.__populace__ = self.__populace__.sort_values(by=['patient_measurement_year_id','encounter_datetime']).drop_duplicates('patient_measurement_year_id',keep='first')
 
     def __initialize_populace(self) -> None:
@@ -101,7 +99,7 @@ class _Sub_1(Submeasure):
     
     def __remove_age_exclusion(self) -> None:
         """
-        Calculates and removes all clients older then 18 years
+        Calculates age and excludes everyone not between 12 and 17 years old
         """
         self.__calculate_age()
         self.__filter_age()
@@ -124,43 +122,17 @@ class _Sub_1(Submeasure):
         prior to their measurement year
         """
         # get first‐ever diagnosis date per patient for each condition
-        d = self.__get_depressions()
         b = self.__get_bipolars()
-        # apply the same exclusion logic twice, once for depression, once for bipolar
-        self.__filter_mental_exclusions(d)
         self.__filter_mental_exclusions(b)
-
-    def __get_depressions(self) -> pd.DataFrame:
-        """
-        Return all depression diagnoses
-        
-        Returns
-        -------
-        pd.Dataframe
-            Patients with depression ICD 10 codes
-        """
-        depression_codes = [
-            'F01.51',
-            'F32.A','F32.0','F32.1','F32.2','F32.3','F32.4','F32.5','F32.89','F32.9',
-            'F33.0','F33.1','F33.2','F33.3','F33.40','F33.41','F33.42','F33.8','F33.9',
-            'F34.1','F34.81','F34.89',
-            'F43.21','F43.23',
-            'F53.0','F53.1',
-            'O90.6',
-            'O99.340','O99.341','O99.342','O99.343','O99.345'
-        ]
-        return self.__DIAGNOSIS__[
-            self.__DIAGNOSIS__['diagnosis'].isin(depression_codes)
-        ].copy()
 
     def __get_bipolars(self) -> pd.DataFrame:
         """
-        Return all bipolar diagnoses
-        
+        Gets all bipolar diagnoses
+
         Returns
         -------
-        pd.Dataframe
-            Patients with bipolar ICD 10 codes
+        pd.DataFrame
+            The dataframe containing all bipolar diagnoses
         """
         bipolar_codes = [
             'F31.10','F31.11','F31.12','F31.13',
@@ -176,15 +148,16 @@ class _Sub_1(Submeasure):
         return self.__DIAGNOSIS__[
             self.__DIAGNOSIS__['diagnosis'].isin(bipolar_codes)
         ].copy()
-
+    
     def __filter_mental_exclusions(self, exclusions:pd.DataFrame) -> None:
         """
-        Removes all patients whose first exclusion date is before their encounter
+        Removes all patients whose first diagnosis (depression or bipolar) occurred
+        before their eligible encounter
 
         Parameters
         ----------
         exclusions
-            Dataframe with encounters that have exclusuionary ICD 10 codes
+            The dataframe containing all diagnoses to be excluded
         """
         # for each patient, find the date of their first-ever diagnosis
         first_diag = (
@@ -194,12 +167,10 @@ class _Sub_1(Submeasure):
             .loc[:, ['patient_id', 'encounter_datetime']]
             .rename(columns={'encounter_datetime': 'first_diag_date'})
         )
-
-        # merge that first-diagnosis date into the current denominator (self.__populace__)
+        # merge first-diagnosis date into the current denominator (self.__populace__)
         pop = self.__populace__.merge(first_diag, how='left', on='patient_id')
-
-        # keep only those encounters that happened on or before the first diagnosis,
-        #    or any patient who never had a diagnosis (first_diag_date is NaN)
+        # keep only those encounters that happened before the first diagnosis,
+        # or any patient who never had a diagnosis (first_diag_date is NaN)
         mask = (
             (pop['encounter_datetime'] <= pop['first_diag_date'])
             | pop['first_diag_date'].isna()
@@ -225,140 +196,147 @@ class _Sub_1(Submeasure):
         """
         Assigns numerator and numerator_desc for multiple False-reason cases.
         """
-        self.__add_screenings_to_populace() 
+        self.__assign_screening_encounter_id()
         self.__determine_screenings_results()
         self.__create_numerator_desc()
 
-    def __add_screenings_to_populace(self) -> None:
+    def __assign_screening_encounter_id(self) -> None:
         """
-        Gets all screenings and adds them to populace
+        Assigns screening_encounter_id to the encounter_id where the total_score is not null in order to find screenings
         """
-        screenings = self.__get_screenings()
-        screenings = self.__prep_screenings_for_merge(screenings)
-        self.__populace__ = self.__populace__.merge(screenings, on='patient_measurement_year_id', how='left')
-
-    def __get_screenings(self) -> pd.DataFrame:
-        """
-        Gets all screenings
-
-        Returns
-        -------
-        pd.DataFrame
-            The dataframe containing all clients screening results
-        """
-        return self.__SCREENINGS__.copy()
-
-    def __prep_screenings_for_merge(self, screenings:pd.DataFrame) -> pd.DataFrame:
-        """
-        Fixes up screenings so that it can be merged into populace
-        
-        Parameters
-        ----------
-        screenings
-            The screenings data
-        
-        Returns
-        -------
-        pd.DataFrame
-            Prepped screenings data for merge
-        """
-        screenings['patient_measurement_year_id'] = self.__create_measurement_year_id(screenings['patient_id'],screenings['screening_date'])
-        screenings = screenings.rename(columns={'encounter_id':'screening_encounter_id',
-                                                'total_score':'screening_score'})
-        # "The measure assesses the most recent depression screening completed..."
-        screenings = screenings.sort_values(['patient_measurement_year_id','screening_date']).drop_duplicates('patient_measurement_year_id',keep='last')
-        screenings = screenings.drop(columns={'patient_id'})
-        screenings['screening_score'] = pd.to_numeric(screenings['screening_score'],errors='coerce')
-        return screenings
+        self.__populace__['screening_encounter_id'] = (
+            self.__populace__['encounter_id']
+            .where(self.__populace__['total_score'].notna()) 
+        )
 
     def __determine_screenings_results(self) -> None:
         """
-        Creates a column showing if clients scored positive or negative on thier screening
+        For each screening type, determine if it is positive or negative based on the total_score
         """
-        # Having a score of 9- does not require a follow up plan
-        # https://www.hiv.uw.edu/page/mental-health-screening/phq-9
-        self.__populace__['positive_screening'] = self.__populace__['screening_score'] > 9
-    
+        def is_positive(r):
+            if pd.isna(r['total_score']):
+                return False
+            if r['screening_type'] in ('PHQ9', 'PHQA'):
+                return r['total_score'] > 9
+            if r['screening_type'] == 'PSC-17':
+                return r['total_score'] > 14 
+            return False
+
+        self.__populace__['positive_screening'] = self.__populace__.apply(is_positive, axis=1)
+
     def __create_numerator_desc(self) -> None:
         """
-        Creates a numerator description column for populace
+        Creates numerator_desc for each screening result
         """
+        # use a copy of the current populace so we don't modify the original dataframe
         df = self.__populace__.copy()
-        # No screening record
-        no_screen = df[df['screening_date'].isna()].copy()
+        # If the total_score is NaN, then the screening was not recorded
+        no_screen = df[df['total_score'].isna()].copy()
         no_screen['numerator'] = False
-        no_screen['numerator_desc'] = 'No screening recorded'
-        # Invalid or missing screening score
-        invalid = df[df['screening_date'].notna() &df['screening_score'].isna()].copy()
+        no_screen['numerator_desc'] = 'No screening recorded'        
+        # Invalid or missing score when total_score is not NaN but positive_screening is NaN
+        invalid = df[df['total_score'].notna() & df['positive_screening'].isna()].copy()
         invalid['numerator'] = False
         invalid['numerator_desc'] = 'Invalid or missing screening score'
-        # combine indexes of rows already marked as no_screen or invalid so they can be excluded
-        used_idx = no_screen.index.union(invalid.index)
-        # now we can select the remaining rows (not in used_idx) for later
-        rem = df.loc[~df.index.isin(used_idx)].copy()
-        # neg screenings (score <= 9)
-        neg = rem[~rem['positive_screening']].copy()
-        neg = self.__set_negative_numerators(neg)
-        # pos screenings (score > 9)
+        used = no_screen.index.union(invalid.index)
+        rem  = df.drop(used)
+        # Negative screens
+        neg = self.__set_negative_numerators(rem[~rem['positive_screening']])
+        # Positive screens
         pos = rem[rem['positive_screening']].copy()
-        pos = self.__set_positive_numerators(pos)
+        pos = self.__set_positive_numerators(pos)        
+        # Overwrite the original populace with the annotated rows
         self.__populace__ = pd.concat([no_screen, invalid, neg, pos], ignore_index=True)
 
-    def __set_positive_numerators(self, positive_screenings:pd.DataFrame) -> pd.DataFrame: 
+    def __set_negative_numerators(self, df:pd.DataFrame) -> pd.DataFrame:
         """
-        Adds numerator fields for patients with positive screening results,
-        tagging those without follow-up with a descriptive reason
+        Adds numerator fields for patients with negative screening results
 
         Parameters
         ----------
-        positive_screenings
-            The screenings data
-        
-        Returns
-        -------
-        pd.DataFrame
-            Positive screenings with numerator fields
-        """
-        follow_ups = self.__find_follow_ups()
-        df = positive_screenings.merge(follow_ups, how='left')
-        # Numerator = (patient has a lest encounter) & (the last encounter is more recent than the screening)
-        df['numerator'] = (df['last_encounter'].notna() & (df['last_encounter'] > df['screening_date']))
-        # Met: True
-        met = df[df['numerator']].copy()
-        met['numerator_desc'] = 'Positive screening with follow up'
-        # Unmet: False
-        unmet = df[~df['numerator']].copy()
-        unmet['numerator_desc'] = 'Positive screening without follow-up'
-        return pd.concat([met, unmet], ignore_index=True)
-    
-    def __set_negative_numerators(self, negative_screenings:pd.DataFrame) -> pd.DataFrame:
-        """
-        Adds numerator fields for patients with negative screening results
+        df
+            The screenings data 
 
         Returns
         -------
         pd.DataFrame
             The dataframe containing all patients with negative screening results 
         """
-        negative_screenings['numerator'] = True
-        negative_screenings['numerator_desc'] = 'Negative screening'
-        return negative_screenings
+        df = df.copy()
+        df['numerator'] = True
+        df['numerator_desc'] = 'Negative screening'
+        return df
 
-    def __find_follow_ups(self) -> pd.DataFrame: 
+    def __set_positive_numerators(self, positive_screenings:pd.DataFrame) -> pd.DataFrame:
         """
-        Finds the most recent encounter for clients with a positve screening
+        Adds numerator fields for patients with positive screening results
+
+        Parameters
+        ----------
+            positive_screenings
+                The screenings data with positive screening results
 
         Returns
         -------
-        pd.DataFrame
-            The dataframe with follow ups
+            pd.DataFrame
+                The dataframe containing all patients with positive screening results
         """
-        # Referral to a provider for additional evaluation.
-        # Pharmacological interventions.
-        # Other interventions for the treatment of depression.
-        last_encounters = self.__populace__.groupby('patient_id')['encounter_datetime'].max().to_frame().reset_index()
-        last_encounters = last_encounters.rename(columns={'encounter_datetime':'last_encounter'})
-        return last_encounters
+        # positive_screenings must have screening_datetime and patient_id
+        follow_ups = self.__find_follow_ups(positive_screenings)
+        df = positive_screenings.merge(
+            follow_ups,
+            left_on=['patient_id', 'encounter_datetime'],   # encounter_datetime is screening_datetime
+            right_on=['patient_id', 'screening_datetime'],
+            how='left'
+        )
+        df['numerator'] = df['last_encounter'].notna() & (df['last_encounter'] > df['screening_datetime'])
+
+        met   = df[df['numerator']].copy()
+        met  ['numerator_desc'] = 'Positive screening with follow up'
+        unmet = df[~df['numerator']].copy()
+        unmet['numerator_desc'] = 'Positive screening without follow-up'
+
+        return pd.concat([met, unmet], ignore_index=True)
+
+    def __find_follow_ups(self, positive_screenings:pd.DataFrame) -> pd.DataFrame:
+        """
+        For each positive screening (where encounter_datetime is the screening date),
+        find the latest encounter_datetime on that SAME calendar date after the screening.
+
+        Parameters
+        ----------
+        positive_screenings
+            The dataframe containing all positive screenings
+        
+        Returns
+        -------
+        pd.DataFrame
+            The dataframe containing the latest follow-up encounter_datetime for each screening
+        """
+        # make a copy of the original populace to avoid modifying it
+        pop = self.__populace__.copy()
+        pop['enc_date'] = pop['encounter_datetime'].dt.date
+        # copy/rename the screening timestamp so the original positive_screenings stays unchanged
+        pos = positive_screenings.copy().rename(
+            columns={'encounter_datetime': 'screening_datetime'}
+        )
+        pos['enc_date'] = pos['screening_datetime'].dt.date
+        # merge on patient_id & date, carrying both encounter and screening timestamps
+        merged = pos[['patient_id', 'enc_date', 'screening_datetime']].merge(
+            pop[['patient_id', 'enc_date', 'encounter_datetime']],
+            on=['patient_id', 'enc_date'],
+            how='left'
+        )
+        # only those encounters that happened after the screening
+        merged_after = merged[merged['encounter_datetime'] > merged['screening_datetime']].copy()
+        # for each screening, pick the latest encounter_datetime ("last encounter") on that date (which is our follow-up)
+        last_per_screen = (
+            merged_after
+            .groupby(['patient_id', 'screening_datetime'])['encounter_datetime']
+            .max()
+            .reset_index(name='last_encounter')
+        )
+        return last_per_screen
 
     @override
     def _apply_time_constraint(self) -> None:
@@ -366,43 +344,24 @@ class _Sub_1(Submeasure):
         Checks to see if the follow up happened after the screening
         """
         # NOTE this is not needed, as counseling should happen in the same session as the screening
-        # which is checked in __set_positive_numerator by last_encounter > screening_date
+        # which is checked in __set_positive_numerator by last_encounter > screening_datetime
         pass
 
-    @override 
+    @override
     def _set_stratification(self) -> None:
         """
         Initializes stratify by filtering populace
         """
-        self.__stratification__ = self.__populace__[[
-                                                    'patient_measurement_year_id',
-                                                    'patient_id',
-                                                    'encounter_id',
-                                                    'encounter_datetime',
-                                                    'screening_date',
-                                                    'last_encounter'
-                                                ]].sort_values([
-                                                    'patient_measurement_year_id',
-                                                    'encounter_id'
-                                                ]).drop_duplicates(
-                                                    'patient_measurement_year_id'
-                                                )
-        self.__stratification__['measurement_year'] = self.__stratification__['patient_measurement_year_id'].str.split('-',expand=True)[1]
-   
-    @override
-    def _set_encounter_stratification(self) -> None:
-        """
-        Sets stratification data that is encounter dependant 
-        """
-        medicaid_data = self.__get_medicaid_from_df()
-        medicaid_data = self.__merge_mediciad_with_stratify(medicaid_data)
-        medicaid_data = self.__filter_insurance_dates(medicaid_data)
-        medicaid_data['patient_measurement_year_id'] = self.__create_measurement_year_id(medicaid_data['patient_id'],medicaid_data['encounter_datetime'])
-        results = self.__determine_medicaid_stratify(medicaid_data)
-        self.__stratification__ = self.__stratification__.merge(results,how='left')
-        # patients that don't have any valid insurtance at their encounter date get completly filtered out and have a NaN instead of False
-        # and would otherwise be filled with 'Unknown' by __fill_blank_stratify()
-        self.__stratification__['medicaid'] = self.__stratification__['medicaid'].fillna(False).copy()
+        self.__stratification__ = (
+            self.__populace__[[
+                'patient_measurement_year_id',
+                'patient_id',
+                'encounter_id',
+                'encounter_datetime',
+                'last_encounter']]
+            .sort_values(['patient_measurement_year_id','encounter_id'])
+            .drop_duplicates('patient_measurement_year_id')
+        )
 
     @override
     def _set_patient_stratification(self) -> None:
@@ -421,11 +380,31 @@ class _Sub_1(Submeasure):
             [self.__DEMOGRAPHICS__['patient_id'].isin(self.__stratification__['patient_id'])]
             .drop_duplicates(subset=['patient_id'], keep='last')
         )
-        self.__stratification__ = self.__stratification__.merge(to_merge,on='patient_id',how='left')
+        # merge on patient_id so we don’t accidentally multiply rows
+        self.__stratification__ = self.__stratification__.merge(
+            to_merge,
+            on='patient_id',
+            how='left'
+        )
+
+    @override
+    def _set_encounter_stratification(self) -> None:
+        """
+        Sets encounter stratifications from dataframe (medicaid)
+        """
+        medicaid_data = self.__get_medicaid_from_df()
+        medicaid_data = self.__merge_mediciad_with_stratify(medicaid_data)
+        medicaid_data = self.__filter_insurance_dates(medicaid_data)
+        medicaid_data['patient_measurement_year_id'] = self.__create_measurement_year_id(medicaid_data['patient_id'],medicaid_data['encounter_datetime'])
+        results = self.__determine_medicaid_stratify(medicaid_data)
+        self.__stratification__ = self.__stratification__.merge(results,how='left')
+        # patients that don't have any valid insurtance at their encounter date get completly filtered out and have a NaN instead of False
+        # and would otherwise be filled with 'Unknown' by __fill_blank_stratify()
+        self.__stratification__['medicaid'] = self.__stratification__['medicaid'].fillna(False).copy()
 
     def __get_medicaid_from_df(self) -> pd.DataFrame: 
         """
-        Gets all relevant patients' insurance information
+        Gets patients' relevant insurance information
 
         Returns
         -------
@@ -446,38 +425,35 @@ class _Sub_1(Submeasure):
         """
         Merges stratify data on top of the medicaid data
 
+        Parameters
+        ----------
+        medicaid_data
+            Insurance data
+
         Returns 
         -------
         pd.DataFrame
             The dataframe containing all patients' insurance information and stratification data
         """
-        return medicaid_data.merge(self.__stratification__[['patient_id','screening_date','encounter_datetime']],how='left')
-
-    def __filter_insurance_dates(self, medicaid_data:pd.DataFrame) -> pd.Series:
+        return medicaid_data.merge(
+            self.__stratification__[["patient_id", "encounter_datetime"]],
+            on=["patient_id"],
+            how="left"
+            )
+    
+    def __filter_insurance_dates(self, medicaid_data:pd.DataFrame) -> pd.DataFrame:
         """
-        Removes insurances that weren't active at the time of the patient's visit
-
-        Parameters
-        ----------
-        medicaid_data
-            Insurance data
-        
-        Returns
-        -------
-        pd.DataFrame
-            Filtered insurance data
+        Keeps only those insurance rows whose coverage window includes the encounter_datetime.
         """
-        # replace nulls with today so that they don't get filtered out
+        # Fill null end dates with today
         medicaid_data['end_datetime'] = medicaid_data['end_datetime'].fillna(datetime.now())
-        # split medicaid in half so that patients without screenings don't get filtered out
-        # the date comparison should use the screening date if it exists else use encounter date
-        # by spliting the df O(n) remains constant and avoids df.apply()
-        screening_visits = medicaid_data[medicaid_data['screening_date'].notna()].copy()
-        encounter_visits = medicaid_data[medicaid_data['screening_date'].isna()].copy()
-        screening_visits['valid'] = (screening_visits['start_datetime'] <= screening_visits['screening_date']) & (screening_visits['end_datetime'] >= screening_visits['screening_date']) # checks if the insurance is valid at time of screenimg
-        encounter_visits['valid'] = (encounter_visits['start_datetime'] <= encounter_visits['encounter_datetime']) & (encounter_visits['end_datetime'] >= encounter_visits['encounter_datetime']) # checks if the insurance is valid at time of encounter
-        medicaid_data = pd.concat([screening_visits,encounter_visits]).sort_values(['patient_id','encounter_datetime']).copy()
-        return medicaid_data[medicaid_data['valid']].copy()
+
+        # A plan is valid if start <= encounter_datetime <= end
+        mask = (
+            (medicaid_data['start_datetime'] <= medicaid_data['encounter_datetime']) &
+            (medicaid_data['end_datetime']   >= medicaid_data['encounter_datetime'])
+        )
+        return medicaid_data.loc[mask].copy()
 
     def __determine_medicaid_stratify(self, medicaid_data:pd.DataFrame) -> pd.DataFrame:
         """
@@ -559,7 +535,6 @@ class _Sub_1(Submeasure):
         """
         Sets the populace data to the unique data points that are needed for the denominator
         """
-
         self.__add_in_stratification_columns()
         self.__remove_unneeded_populace_columns()
 
@@ -568,14 +543,14 @@ class _Sub_1(Submeasure):
         Merges in stratification columns that are unique to the measurement year
         """
         self.__populace__ = self.__populace__.merge(
-            self.__stratification__[["patient_measurement_year_id", "medicaid"]],
+           self.__stratification__[["patient_measurement_year_id", "medicaid"]],
             on="patient_measurement_year_id",
             how="left"
         )
-  
+
     def __remove_unneeded_populace_columns(self) -> None:
         """
-        Removes unneeded populace columns
+        Keeps only the required columns (including medicaid) in the populace
         """
         self.__populace__ = self.__populace__[
             [
@@ -591,18 +566,19 @@ class _Sub_1(Submeasure):
         ].drop_duplicates(subset="patient_measurement_year_id")
 
     @override
+    def _trim_unnecessary_stratification_data(self) -> None:
+        """
+        Keeps one row per patient_id in the stratification dataframe
+        """
+        self.__stratification__ = self.__stratification__[['patient_id', 'ethnicity', 'race']].drop_duplicates(subset='patient_id')
+
+    @override
     def _sort_final_data(self) -> None:
         """
-        Sorts the populace and stratification dataframes
+        Sorts the Populace and Stratification dataframes
         """
         self.__populace__ = self.__populace__.sort_values('patient_measurement_year_id')
         self.__stratification__ = self.__stratification__.sort_values('patient_id')
-
-    def _trim_unnecessary_stratification_data(self) -> None:
-        """
-        Removes unneeded stratification columns
-        """
-        self.__stratification__ = self.__stratification__[['patient_id','ethnicity','race']].drop_duplicates()
 
 class CDF_CH(Measurement):
     """
@@ -624,7 +600,6 @@ class CDF_CH(Measurement):
     >>> CDF_CH_sub_1 = [
     >>>     "Populace",
     >>>     "Diagnostic_History",
-    >>>     "CDF_Screenings",
     >>>     "Demographic_Data",
     >>>     "Insurance_History"
     >>> ]
@@ -640,13 +615,6 @@ class CDF_CH(Measurement):
     >>>     "patient_id": (str, 'object'),
     >>>     "encounter_datetime": ("datetime64[ns]",),
     >>>     "diagnosis": (str, 'object')
-    >>> }
-
-    >>> CDF_Screenings = {
-    >>>     "patient_id": (str, 'object'),
-    >>>     "encounter_id": (str, 'object'),
-    >>>     "screening_date": ("datetime64[ns]",),
-    >>>     "total_score": (int, float)
     >>> }
 
     >>> Demographic_Data = {

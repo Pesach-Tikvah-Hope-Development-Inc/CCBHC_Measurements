@@ -10,14 +10,12 @@ ASC_sub_2 = [
 CDF_AD_sub_1 = [
     "Populace",
     "Diagnostic_History",
-    "CDF_Screenings",
     "Demographic_Data",
     "Insurance_History"
 ]
 CDF_CH_sub_1 = [
     "Populace",
     "Diagnostic_History",
-    "CDF_Screenings",
     "Demographic_Data",
     "Insurance_History"
 ]

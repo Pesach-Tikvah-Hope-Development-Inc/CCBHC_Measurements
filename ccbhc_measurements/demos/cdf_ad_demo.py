@@ -32,17 +32,6 @@ insurances = [
     "bc/bs (healthplus) medicaid"
     "cigna (pvt)"
 ]
-# actual ICD-10 code sets
-depression_codes = [
-    'F01.51',
-    'F32.A','F32.0','F32.1','F32.2','F32.3','F32.4','F32.5','F32.89','F32.9',
-    'F33.0','F33.1','F33.2','F33.3','F33.40','F33.41','F33.42','F33.8','F33.9',
-    'F34.1','F34.81','F34.89',
-    'F43.21','F43.23',
-    'F53.0','F53.1',
-    'O90.6',
-    'O99.340','O99.341','O99.342','O99.343','O99.345'
-]
 bipolar_codes = [
     'F31.10','F31.11','F31.12','F31.13',
     'F31.2',
@@ -53,7 +42,7 @@ bipolar_codes = [
     'F31.81','F31.89',
     'F31.9'
 ]
-diagnoses_list = depression_codes + bipolar_codes
+diagnoses_list = bipolar_codes
 patient_ids = random.sample(range(10_000, 99_999), pop_size)
 dob = [
     datetime(1990, 1, 1) + timedelta(
@@ -106,14 +95,18 @@ screening_dates = [
     for _ in range(screenings_count)
 ]
 total_scores = [random.randint(0, 15) for _ in range(screenings_count)]
-cdf_screenings = pd.DataFrame({
-    "patient_id": [str(pid) for pid in screening_patient_ids],
-    "encounter_id": [str(eid) for eid in screening_encounter_ids],
-    "screening_date": screening_dates,
-    "total_score": [float(x) for x in total_scores]
+# --- Screenings (for merging into populace) ---
+screened = populace.sample(n=screenings_count, replace=False,random_state=12345).assign(
+    screening_type=lambda df: random.choices(['PHQ9','PHQA','PSC-17'], k=len(df)),
+    total_score   =lambda df: [random.randint(0,15) for _ in df.index],
+    screening_date=lambda df: df['encounter_datetime']
+)
 
-})
-cdf_screenings['screening_date'] = pd.to_datetime(cdf_screenings['screening_date'])
+populace = populace.merge(
+    screened[['patient_id','encounter_id','screening_date','total_score','screening_type']],
+    on=['patient_id','encounter_id'],
+    how='left'
+)
 
 # --- Demographic_Data ---
 demographic_races = random.choices(races, k=pop_size)
@@ -145,7 +138,6 @@ insurance_history['end_datetime'] = pd.to_datetime(insurance_history['end_dateti
 data = [
     populace,
     diagnostic_history,
-    cdf_screenings,
     demographic_data,
     insurance_history
 ]
