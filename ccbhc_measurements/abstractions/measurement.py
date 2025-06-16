@@ -8,13 +8,19 @@ class Measurement(ABC):
     Measurements are a standardized metric created by SAMHSA used to measure the performance of a CCBHC
 
     This class defines the core methods that must be implemented by any concrete measurement class
+
+    Parameters
+    ----------
+    name
+        Name of the measurement
     """
 
     def __init__(self,name:str):
         super().__init__()
-        self.__NAME__:str = name
-
-    def get_name(self) -> str:
+        self.__NAME__: str = name
+    
+    @property
+    def name(self) -> str:
         """
         Returns
         -------

@@ -435,7 +435,7 @@ class SDOH(Measurement):
 
     def __init__(self, sub1_data:list[pd.DataFrame]):
         super().__init__("SDOH")
-        self.__sub1__: Submeasure = _Sub_1(self.get_name() + "_sub_1", sub1_data)
+        self.__sub1__: Submeasure = _Sub_1(self.name + "_sub_1", sub1_data)
 
     @override
     def get_all_submeasures(self) -> dict[str:pd.DataFrame]:

@@ -35,7 +35,7 @@ class Submeasure(Denominator,Numerator,Stratification):
     def __init__(self,name:str, dataframes: list[pd.DataFrame]):
         super().__init__()
         self.__NAME__:str = name
-        self.__LOGGER__ = logging.getLogger(name)
+        self.__LOGGER__ = logging.getLogger()
         self.__DATA__:pd.DataFrame = None
         self.__DIAGNOSIS__:pd.DataFrame = None
         self.__DEMOGRAPHICS__:pd.DataFrame = None
@@ -47,8 +47,9 @@ class Submeasure(Denominator,Numerator,Stratification):
         self.__populace__:pd.DataFrame = None
         self.__stratification__:pd.DataFrame = None
         self.__is_calculated__ = False
-
-    def get_name(self) -> str:
+    
+    @property
+    def name(self) -> str:
         """
         Returns
         -------
@@ -95,10 +96,10 @@ class Submeasure(Denominator,Numerator,Stratification):
                 OR if any dataframes have columns not properly formatted
         """
         try:
-            validator = build(self.get_name())
+            validator = build(self.name)
             return validator.validate(dataframes)
         except Exception:
-            self.__LOGGER__.error("Failed to Validate",exc_info=True)
+            self.__LOGGER__.error(f"{self.name} Failed to Validate",exc_info=True)
 
     @abstractmethod
     def _set_dataframes(self, dataframes:list[pd.DataFrame]) -> None:
@@ -138,14 +139,14 @@ class Submeasure(Denominator,Numerator,Stratification):
             self.calculate_numerator()
             self.stratify_data()
             data = self.get_final_data()
-            self.__LOGGER__.info("Successfully Calculated Submeasure Data")
+            self.__LOGGER__.info(f"{self.name} Successfully Calculated Submeasure Data")
             return data
         except Exception as e:
             # all exceptions raised in other methods log themselves already
             # but since all exceptions get excepted in this method, it's needed to check which exception is being caught
             # in order to avoid double logging
             if e == self.__VALIDATION_DETAILS__:
-                self.__LOGGER__.error(msg="Failed to Validate Dataframes",exc_info=True)
+                self.__LOGGER__.error(msg=f"{self.name} Failed to Validate Dataframes",exc_info=True)
             raise
 
     def calculate_denominator(self) -> None:
@@ -156,7 +157,7 @@ class Submeasure(Denominator,Numerator,Stratification):
             self._set_populace()
             self._remove_exclusions()
         except Exception:
-            self.__LOGGER__.error("Failed to Calculate Denominator",exc_info=True)
+            self.__LOGGER__.error(f"{self.name} Failed to Calculate Denominator",exc_info=True)
             raise
 
     def calculate_numerator(self) -> None:
@@ -167,7 +168,7 @@ class Submeasure(Denominator,Numerator,Stratification):
             self._apply_time_constraint()
             self._find_performance_met()
         except Exception:
-            self.__LOGGER__.error("Failed to Calculate Numerator",exc_info=True)
+            self.__LOGGER__.error(f"{self.name} Failed to Calculate Numerator",exc_info=True)
             raise
     
     def stratify_data(self) -> None:
@@ -183,7 +184,7 @@ class Submeasure(Denominator,Numerator,Stratification):
             self._set_encounter_stratification()
             self._fill_blank_stratification()
         except Exception:
-            self.__LOGGER__.error("Failed to Stratify Data",exc_info=True)
+            self.__LOGGER__.error(f"{self.name} Failed to Stratify Data",exc_info=True)
             raise
 
     def get_final_data(self)-> dict[str:pd.DataFrame]:
@@ -204,11 +205,11 @@ class Submeasure(Denominator,Numerator,Stratification):
             self._sort_final_data()
             self.__is_calculated__ = True
             return {
-                self.get_name() : self.__populace__.copy(),
-                self.get_name() + '_stratification' : self.__stratification__.copy()
+                self.name: self.__populace__.copy(),
+                self.name + '_stratification' : self.__stratification__.copy()
             }
         except Exception:
-            self.__LOGGER__.error("Failed to Get Final Data",exc_info=True)
+            self.__LOGGER__.error(f"{self.name} Failed to Get Final Data",exc_info=True)
             raise
 
     @abstractmethod
@@ -243,6 +244,6 @@ class Submeasure(Denominator,Numerator,Stratification):
 
     def __str__(self) -> str:
         if not self.__is_calculated__:
-            return f'{self.__NAME__} has not been calculated'
-        return f'{self.__NAME__} has a denominator of {len(self.__populace__)} and a numerator of {len(self.__populace__[self.__populace__['numerator']])}'
+            return f'{self.name}  has not been calculated'
+        return f'{self.name}  has a denominator of {len(self.__populace__)} and a numerator of {len(self.__populace__[self.__populace__['numerator']])}'
     

@@ -553,7 +553,6 @@ class _Sub_1(Submeasure):
         """
         return self.__stratification__[self.__stratification__['patient_id'].isin(sub2_ids)].copy()
 
-
 class _Sub_2(Submeasure):
     """
     Percentage of clients who were identified as unhealthy alcohol users and who recieved brief counseling
@@ -799,7 +798,6 @@ class _Sub_2(Submeasure):
         self.__populace__ = self.__populace__.sort_values('patient_measurement_year_id').copy()
         self.__stratification__ = self.__stratification__.sort_values('patient_id').copy()
 
-
 class ASC(Measurement):
     """
     The ASC measure calculates the Percentage of clients aged 18 years and older who were
@@ -858,8 +856,8 @@ class ASC(Measurement):
 
     def __init__(self,sub1_data:list[pd.DataFrame]):
         super().__init__("ASC")
-        self.__sub1__: Submeasure = _Sub_1(self.get_name() + '_sub_1', sub1_data)
-        self.__sub2__: Submeasure = _Sub_2(self.get_name() + '_sub_2', None)
+        self.__sub1__: Submeasure = _Sub_1(self.name + '_sub_1', sub1_data)
+        self.__sub2__: Submeasure = _Sub_2(self.name + '_sub_2', None)
         self.__sub2__.__setattr__("__sub1_subset__",False)
 
     @override
