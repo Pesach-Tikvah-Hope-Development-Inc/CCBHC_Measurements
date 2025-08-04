@@ -38,7 +38,7 @@ We've also created a base Power BI file as a foundation for a dashboard. [Check 
     - [DEP-REM-6 README][DEP-REM-6 Submeasure 1 README]
  - **ASC -** Preventive Care and Screening: Unhealthy Alcohol Use: Screening & Brief Counseling 
     - [ASC Detailed Data Input and Output Diagram][ASC Submeasure 1 Detailed Data Input and Output Diagram]
-    - [ASC README][SDOH Submeasure 1 README]
+    - [ASC README][ASC Submeasure 1 README]
  - **SDOH -** Social Determinants of Health 
     - [SDOH Detailed Data Input and Output Diagram][SDOH Submeasure 1 Detailed Data Input and Output Diagram]
     - [SDOH README][SDOH Submeasure 1 README]
