@@ -268,77 +268,18 @@ class _Sub_1(Submeasure):
         df['numerator'] = True
         df['numerator_desc'] = 'Negative screening'
         return df
-
-    def __set_positive_numerators(self, positive_screenings:pd.DataFrame) -> pd.DataFrame:
+    
+    def __set_positive_numerators(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Adds numerator fields for patients with positive screening results
-
-        Parameters
-        ----------
-            positive_screenings
-                The screenings data with positive screening results
-
-        Returns
-        -------
-            pd.DataFrame
-                The dataframe containing all patients with positive screening results
+        Uses the SQL-computed `follow_up` flag to set numerator and description.
         """
-        # positive_screenings must have screening_datetime and patient_id
-        follow_ups = self.__find_follow_ups(positive_screenings)
-        df = positive_screenings.merge(
-            follow_ups,
-            left_on=['patient_id', 'encounter_datetime'],   # encounter_datetime is screening_datetime
-            right_on=['patient_id', 'screening_datetime'],
-            how='left'
-        )
-        df['numerator'] = df['last_encounter'].notna() & (df['last_encounter'] > df['screening_datetime'])
-
-        met   = df[df['numerator']].copy()
-        met  ['numerator_desc'] = 'Positive screening with follow up'
-        unmet = df[~df['numerator']].copy()
-        unmet['numerator_desc'] = 'Positive screening without follow-up'
-
-        return pd.concat([met, unmet], ignore_index=True)
-
-    def __find_follow_ups(self, positive_screenings:pd.DataFrame) -> pd.DataFrame:
-        """
-        For each positive screening (where encounter_datetime is the screening date),
-        find the latest encounter_datetime on that SAME calendar date after the screening.
-
-        Parameters
-        ----------
-        positive_screenings
-            The dataframe containing all positive screenings
-        
-        Returns
-        -------
-        pd.DataFrame
-            The dataframe containing the latest follow-up encounter_datetime for each screening
-        """
-        # make a copy of the original populace to avoid modifying it
-        pop = self.__populace__.copy()
-        pop['enc_date'] = pop['encounter_datetime'].dt.date
-        # copy/rename the screening timestamp so the original positive_screenings stays unchanged
-        pos = positive_screenings.copy().rename(
-            columns={'encounter_datetime': 'screening_datetime'}
-        )
-        pos['enc_date'] = pos['screening_datetime'].dt.date
-        # merge on patient_id & date, carrying both encounter and screening timestamps
-        merged = pos[['patient_id', 'enc_date', 'screening_datetime']].merge(
-            pop[['patient_id', 'enc_date', 'encounter_datetime']],
-            on=['patient_id', 'enc_date'],
-            how='left'
-        )
-        # only those encounters that happened after the screening
-        merged_after = merged[merged['encounter_datetime'] > merged['screening_datetime']].copy()
-        # for each screening, pick the latest encounter_datetime ("last encounter") on that date (which is our follow-up)
-        last_per_screen = (
-            merged_after
-            .groupby(['patient_id', 'screening_datetime'])['encounter_datetime']
-            .max()
-            .reset_index(name='last_encounter')
-        )
-        return last_per_screen
+        df = df.copy()
+        df['numerator'] = df['follow_up']
+        df['numerator_desc'] = df['follow_up'].map({
+            True:  'Positive screening with follow up',
+            False: 'Positive screening without follow-up'
+        })
+        return df
 
     @override
     def _apply_time_constraint(self) -> None:
@@ -352,7 +293,7 @@ class _Sub_1(Submeasure):
     @override
     def _set_stratification(self) -> None:
         """
-        Initializes stratify by filtering populace
+        Initializes stratification by filtering populace.
         """
         self.__stratification__ = (
             self.__populace__[[
@@ -360,8 +301,9 @@ class _Sub_1(Submeasure):
                 'patient_id',
                 'encounter_id',
                 'encounter_datetime',
-                'last_encounter']]
-            .sort_values(['patient_measurement_year_id','encounter_id'])
+                'follow_up'
+            ]]
+            .sort_values(['patient_measurement_year_id', 'encounter_id'])
             .drop_duplicates('patient_measurement_year_id')
         )
 
@@ -552,7 +494,7 @@ class _Sub_1(Submeasure):
         
     def __remove_unneeded_populace_columns(self) -> None:
         """
-        Keeps only the required columns (including medicaid) in the populace
+        Keeps only the required columns (including follow_up and medicaid) in the populace.
         """
         self.__populace__ = self.__populace__[
             [
@@ -560,9 +502,9 @@ class _Sub_1(Submeasure):
                 "patient_id",
                 "encounter_id",
                 "screening_encounter_id",
-                "last_encounter",
                 "numerator",
                 "numerator_desc",
+                "follow_up",
                 "medicaid",
             ]
         ].drop_duplicates(subset="patient_measurement_year_id")

@@ -9,6 +9,7 @@ pop_size = 30
 encounters_per_patient = 18
 screenings_count = 18
 diagnostics_count = 25
+
 races = [
     "White",
     "Other Race",
@@ -32,17 +33,8 @@ insurances = [
     "bc/bs (healthplus) medicaid"
     "cigna (pvt)"
 ]
-bipolar_codes = [
-    'F31.10','F31.11','F31.12','F31.13',
-    'F31.2',
-    'F31.30','F31.31','F31.32',
-    'F31.4','F31.5',
-    'F31.60','F31.61','F31.62','F31.63','F31.64',
-    'F31.70','F31.71','F31.72','F31.73','F31.74','F31.75','F31.76','F31.77','F31.78',
-    'F31.81','F31.89',
-    'F31.9'
-]
-diagnoses_list = bipolar_codes
+
+diagnoses_list = ["depression", "bipolar"]
 patient_ids = random.sample(range(10_000, 99_999), pop_size)
 dob = [
     datetime(1990, 1, 1) + timedelta(
@@ -95,18 +87,13 @@ screening_dates = [
     for _ in range(screenings_count)
 ]
 total_scores = [random.randint(0, 15) for _ in range(screenings_count)]
-# --- Screenings (for merging into populace) ---
-screened = populace.sample(n=screenings_count, replace=False,random_state=12345).assign(
-    screening_type=lambda df: random.choices(['PHQ9','PHQA','PSC-17'], k=len(df)),
-    total_score   =lambda df: [random.randint(0,15) for _ in df.index],
-    screening_date=lambda df: df['encounter_datetime']
-)
-
-populace = populace.merge(
-    screened[['patient_id','encounter_id','screening_date','total_score','screening_type']],
-    on=['patient_id','encounter_id'],
-    how='left'
-)
+cdf_screenings = pd.DataFrame({
+    "patient_id": [str(pid) for pid in screening_patient_ids],
+    "encounter_id": [str(eid) for eid in screening_encounter_ids],
+    "screening_date": screening_dates,
+    "total_score": [float(x) for x in total_scores]
+})
+cdf_screenings['screening_date'] = pd.to_datetime(cdf_screenings['screening_date'])
 
 # --- Demographic_Data ---
 demographic_races = random.choices(races, k=pop_size)
@@ -138,6 +125,7 @@ insurance_history['end_datetime'] = pd.to_datetime(insurance_history['end_dateti
 data = [
     populace,
     diagnostic_history,
+    cdf_screenings,
     demographic_data,
     insurance_history
 ]
