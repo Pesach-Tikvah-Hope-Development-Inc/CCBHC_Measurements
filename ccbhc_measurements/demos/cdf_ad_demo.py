@@ -33,7 +33,6 @@ insurances = [
     "bc/bs (healthplus) medicaid"
     "cigna (pvt)"
 ]
-
 diagnoses_list = ["depression", "bipolar"]
 patient_ids = random.sample(range(10_000, 99_999), pop_size)
 dob = [
@@ -95,6 +94,18 @@ cdf_screenings = pd.DataFrame({
 })
 cdf_screenings['screening_date'] = pd.to_datetime(cdf_screenings['screening_date'])
 
+# merge screenings into populace
+populace = populace.merge(
+    cdf_screenings[[
+        'patient_id','encounter_id',
+        'screening_date','total_score'
+    ]],
+    on=['patient_id','encounter_id'],
+    how='left'
+)
+
+populace['follow_up'] = random.choices([True, False], k=len(populace))
+
 # --- Demographic_Data ---
 demographic_races = random.choices(races, k=pop_size)
 demographic_ethnicities = random.choices(ethnicities, k=pop_size)
@@ -125,7 +136,6 @@ insurance_history['end_datetime'] = pd.to_datetime(insurance_history['end_dateti
 data = [
     populace,
     diagnostic_history,
-    cdf_screenings,
     demographic_data,
     insurance_history
 ]
