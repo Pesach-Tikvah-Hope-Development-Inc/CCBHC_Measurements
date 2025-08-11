@@ -20,7 +20,7 @@ Percentage of clients aged 17 and younger who received at least one depression s
 
 ## Required Data
 
-[Click here to see the Input and Output Diagram](https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/CDF_CH%20Input%20Output%20Diagram.pdf)
+[Click here to see the Input and Output Diagram](https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/CDF%20CH%20Input%20Output%20Diagram.pdf)
 
 ### SubMeasure 1
 
