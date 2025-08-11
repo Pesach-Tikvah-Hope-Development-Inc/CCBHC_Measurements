@@ -20,7 +20,7 @@ Percentage of clients aged 18 and older who received at least one depression scr
 
 ## Required Data
 
-[Click here to see the Input and Output Diagram](https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/CDF_AD%20Input%20Output%20Requirements.pdf)
+[Click here to see the Input and Output Diagram](https://github.com/Pesach-Tikvah-Hope-Development-Inc/CCBHC_Measurements/blob/main/ccbhc_measurements/diagrams/CDF_AD%20Input%20Output%20Diagram.pdf)
 
 ### SubMeasure 1
 
