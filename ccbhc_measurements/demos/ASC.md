@@ -181,7 +181,8 @@ for name, data in results.items():
 ## Notes
 
 - Systematic Screenings
-    - SAMHSA allows for multiple types of screenings such as AUDIT, AUDIT-C and the Single Question Screening.
+    - SAMHSA allows for multiple types of screenings.
+    - The only ones supported in this package are the AUDIT, AUDIT-C and the Single Question Screening.
 
 - Medicaid
     - Any patient not included in the medicaid dataframe will be marked as "other" in the final data.

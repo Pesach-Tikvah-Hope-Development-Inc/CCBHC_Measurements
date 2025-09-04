@@ -12,7 +12,7 @@ class Validator:
     def __init__(self, schemas:dict):
         self.SCHEMAS = schemas
 
-    def validate(self, dataframes: list[pd.DataFrame]) -> tuple[bool,ValueError]:
+    def validate(self, dataframes:list[pd.DataFrame]) -> tuple[bool,ValueError]:
         """
         Validates the given list of dataframes based on expected columns and data types
 
@@ -42,7 +42,6 @@ class Validator:
         for i, (df_name, col_specs) in enumerate(self.SCHEMAS.items()):
             df = dataframes[i]
             errors[df_name] = []
-
             for col, dtype in col_specs.items():
                 if col not in df.columns:
                     errors[df_name].append(f"Missing column: {col}")

@@ -33,24 +33,41 @@ class _Sub_1(Submeasure):
 
     def __get_regular_visits(self) -> pd.DataFrame:
         """
-        Doc String
+        Returns
+        -------
+        pd.Dataframe
+            Encounter details
         """
         return self.__DATA__[['patient_id','patient_DOB','encounter_id','encounter_datetime']].copy()
 
     def __get_preventitive_visits(self) -> pd.DataFrame:
         """
-        Doc String
+        Returns
+        -------
+        pd.Dataframe
+            Preventitive encounter details
         """
         return self.__DATA__[['patient_id','patient_DOB','encounter_id','encounter_datetime','cpt_code']].copy()
 
     def __get_screenings(self, df:pd.DataFrame) -> pd.DataFrame:
         """
-        Doc String
+        Finds encounters that are valid screenings
+
+        Parameters
+        ----------
+        df
+            Dataframe containing all encounters
+
+        Returns
+        -------
+        pd.Dataframe
+            Screening details
         """
         df['screening_datetime'] = df['encounter_datetime'].copy()
-        # non screening encounters are None and None == None -> False
-        screening_mask = df['screening'] == df['screening']
-        return df[['patient_id','screening_datetime','screening','score']][screening_mask].copy()
+        # create a mask for all valid screening types, alcohol_screeners is already in lower case
+        df['screening'] = df['screening'].str.lower()
+        valid_screenings = df['screening'].isin(alcohol_screeners)
+        return df[valid_screenings][['patient_id','screening_datetime','screening','score']].copy()
 
     @override
     def _set_populace(self) -> None:

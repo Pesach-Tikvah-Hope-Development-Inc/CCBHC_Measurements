@@ -235,7 +235,7 @@ class _Sub_1(Submeasure):
         # If the total_score is NaN, then the screening was not recorded
         no_screen = df[df['total_score'].isna()].copy()
         no_screen['numerator'] = False
-        no_screen['numerator_desc'] = 'No screening recorded'        
+        no_screen['numerator_desc'] = 'No screening recorded'
         # Invalid or missing score when total_score is not NaN but positive_screening is NaN
         invalid = df[df['total_score'].notna() & df['positive_screening'].isna()].copy()
         invalid['numerator'] = False

@@ -245,5 +245,5 @@ class Submeasure(Denominator,Numerator,Stratification):
     def __str__(self) -> str:
         if not self.__is_calculated__:
             return f'{self.name}  has not been calculated'
-        return f'{self.name}  has a denominator of {len(self.__populace__)} and a numerator of {len(self.__populace__[self.__populace__['numerator']])}'
+        return f'{self.name}  has a denominator of {len(self.__populace__)} and a numerator of {len(self.__populace__[self.__populace__["numerator"]])}'
     
