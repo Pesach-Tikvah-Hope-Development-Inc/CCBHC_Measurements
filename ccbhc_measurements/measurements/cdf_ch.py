@@ -233,7 +233,7 @@ class _Sub_1(Submeasure):
         # If the total_score is NaN, then the screening was not recorded
         no_screen = df[df['total_score'].isna()].copy()
         no_screen['numerator'] = False
-        no_screen['numerator_desc'] = 'No screening recorded'        
+        no_screen['numerator_desc'] = 'No screening recorded'
         # Invalid or missing score when total_score is not NaN but positive_screening is NaN
         invalid = df[df['total_score'].notna() & df['positive_screening'].isna()].copy()
         invalid['numerator'] = False
@@ -244,7 +244,7 @@ class _Sub_1(Submeasure):
         neg = self.__set_negative_numerators(rem[~rem['positive_screening']])
         # Positive screens
         pos = rem[rem['positive_screening']].copy()
-        pos = self.__set_positive_numerators(pos)        
+        pos = self.__set_positive_numerators(pos)
         # Overwrite the original populace with the annotated rows
         self.__populace__ = pd.concat([no_screen, invalid, neg, pos], ignore_index=True)
 
@@ -430,7 +430,7 @@ class _Sub_1(Submeasure):
         pd.Series
             A boolean series showing if the insurance plan contains medicaid
         """
-        return plan.str.contains('medicaid')
+        return plan.str.lower().contains('medicaid')
     
     def __replace_medicaid_values(self, col:pd.Series) -> pd.Series:
         """

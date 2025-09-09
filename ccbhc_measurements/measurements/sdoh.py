@@ -318,7 +318,7 @@ class _Sub_1(Submeasure):
         pd.Series
             A bool represtning if the plan is medicaid
         """
-        return plan.str.contains('medicaid')
+        return plan.str.lower().contains('medicaid')
 
     def __replace_medicaid_values(self, col:pd.Series) -> pd.Series:
         """
