@@ -23,10 +23,12 @@ class _Sub_1(Submeasure):
             A validated list of dataframes
         """
         # NOTE this is a quick fix to make the front end nicer, the back end needs refactoring
-        self.__DATA__ = dataframes[0].copy()
+        self.__DATA__ = dataframes[0].sort_values('encounter_datetime').copy()
         self.__REGULAR_VISITS__ = self.__get_regular_visits()
         self.__PREVENTIVE_VISITS__ = self.__get_preventitive_visits()
-        self.__SCREENINGS__ = self.__get_screenings(dataframes[0])
+        screening_df = self.__get_screenings(dataframes[0].sort_values('encounter_datetime'))
+        screening_df['patient_measurement_year_id'] = self.__create_patient_measurement_year_id(screening_df['patient_id'],screening_df['screening_datetime'])
+        self.__SCREENINGS__ = screening_df.copy()
         self.__DIAGNOSIS__ = dataframes[1].sort_values('encounter_datetime').copy()
         self.__DEMOGRAPHICS__ = dataframes[2].sort_values('patient_id').copy()
         self.__INSURANCE__ = dataframes[3].sort_values('patient_id').copy()
@@ -67,7 +69,7 @@ class _Sub_1(Submeasure):
         # create a mask for all valid screening types, alcohol_screeners is already in lower case
         df['screening'] = df['screening'].str.lower()
         valid_screenings = df['screening'].isin(alcohol_screeners)
-        return df[valid_screenings][['patient_id','screening_datetime','screening','score']].copy()
+        return df[valid_screenings][['patient_id','encounter_id','screening_datetime','screening','score']].sort_values('screening_datetime',ascending=False).copy()
 
     @override
     def _set_populace(self) -> None:
@@ -263,9 +265,9 @@ class _Sub_1(Submeasure):
         # split populace into yes/no screenings allowing for screening_groups.get_group to not break on patients without screenings
         screening_mask = self.__populace__['patient_id'].isin(screenings['patient_id'])
         has_no_screening = self.__populace__[~screening_mask].copy()
-        has_no_screening['numerator'] = False
+        has_no_screening[['numerator','encounter_id']] = False, None
         has_screening = self.__populace__[screening_mask].copy()
-        has_screening['numerator'] = has_screening.apply(lambda row: self.__check_screening_date(row,screening_groups.get_group(row['patient_id'])),axis=1)
+        has_screening[['numerator','encounter_id']] = has_screening.apply(lambda row: self.__get_screening_details(row,screening_groups.get_group(row['patient_id'])),axis=1)
         self.__populace__ = pd.concat([has_screening,has_no_screening])
 
     def __get_systematic_screenings(self) -> pd.DataFrame:
@@ -277,7 +279,7 @@ class _Sub_1(Submeasure):
         """
         return self.__SCREENINGS__.copy()
 
-    def __check_screening_date(self, patient_data:pd.Series, screening_group:pd.DataFrame) -> bool:
+    def __get_screening_details(self, patient_data:pd.Series, screening_group:pd.Series) -> pd.Series:
         """
         Checks if the screening was during the screening date range
 
@@ -290,11 +292,23 @@ class _Sub_1(Submeasure):
         
         Returns
         -------
-        bool
-            Was there a screening given within the screening date range
+        pd.Series
+            bool
+                Was there a screening given within the screening date range
+            str
+                Id of the screening
         """
         screening_mask = (screening_group['screening_datetime'].dt.date >= patient_data['earliest_screening_date']) & (screening_group['screening_datetime'].dt.date <= patient_data['latest_screening_date'])
-        return len(screening_group[screening_mask]) >= 1
+        valid_screenings = screening_group[screening_mask].copy()
+        if len(valid_screenings) >= 1:
+            return pd.Series({
+                'numerator':True,
+                'screening_id':valid_screenings['encounter_id'].iat[0]
+            })
+        return pd.Series({
+                'numerator':False,
+                'screening_id':None
+            })
 
     @override
     def _set_stratification(self) -> None:
@@ -473,6 +487,13 @@ class _Sub_1(Submeasure):
                 Name of the data subset
             pd.Dataframe
                 Data
+
+        Notes
+        -----
+        Sub2 subset includes:
+            - POPULACE
+            - COUNSELINGS
+            - STRATIFICATION
         """
         sub2_pop = self.__get_sub2_populace()
         sub2_counselings = self.__get_counselings()
@@ -481,7 +502,7 @@ class _Sub_1(Submeasure):
             'POPULACE':sub2_pop,
             'COUNSELINGS':sub2_counselings,
             'STRATIFICATION':sub2_strat
-        }
+        } # return in capitals b/c the keys from sub2_subset.items() get used for __sub2__.__setattr__('__'+key+'__',val)
 
     def __get_sub2_populace(self) -> pd.DataFrame:
         """
@@ -551,7 +572,7 @@ class _Sub_1(Submeasure):
         counselings = self.__DATA__.copy()
         mask = counselings['cpt_code'].map(lambda row: 'G2200' in str(row))
         counselings = counselings[mask].copy()
-        counselings[['patient_id','encounter_id','encounter_datetime']]
+        counselings = counselings[['patient_id','encounter_id','encounter_datetime']].copy()
         return counselings
 
     def __get_sub2_stratification(self, sub2_ids:pd.Series) -> pd.DataFrame:
@@ -674,7 +695,7 @@ class _Sub_2(Submeasure):
         """
         Checks if patients received brief counseling
         """
-        counselings = self.__get_counselings()
+        counselings = self.__get_counselings().sort_values('encounter_datetime')
         self.__check_counselings(counselings)
 
     def __get_counselings(self) -> pd.DataFrame:
@@ -705,14 +726,14 @@ class _Sub_2(Submeasure):
             possible_numerators = self.__populace__[numerator_candidates].copy()
             denominators = self.__populace__[~numerator_candidates].copy()
             
-            possible_numerators[['counseling_datetime','numerator','numerator_time']] = possible_numerators.apply(lambda row: (pd.Series(self.__create_numerator_values(row,groups.get_group(row['patient_id'])))),axis=1)
-            denominators[['counseling_datetime','numerator','numerator_time']] = [None,False,'Counseling did not happen']
+            possible_numerators[['numerator','numerator_desc','counseling_id']] = possible_numerators.apply(lambda row: (pd.Series(self.__create_numerator_values(row,groups.get_group(row['patient_id'])))),axis=1)
+            denominators[['numerator','numerator_desc','counseling_id']] = [False,'Counseling did not happen',None]
 
             self.__populace__ = pd.concat([possible_numerators,denominators])
         else:
-            self.__populace__[['counseling_datetime','numerator','numerator_time']] = [None,False,'Counseling did not happen']
+            self.__populace__[['numerator','numerator_desc','counseling_id']] = [False,'Counseling did not happen',None]
 
-    def __create_numerator_values(self, row:pd.Series, counselings:pd.DataFrame) -> tuple[bool,str]:
+    def __create_numerator_values(self, row:pd.Series, counselings:pd.DataFrame) -> tuple[bool,str,str]:
         """
         Creates a numerator value and an offset of how soon after the counseling happened
 
@@ -721,15 +742,17 @@ class _Sub_2(Submeasure):
         row
             Patient screening details
         counselings
-            Patient screening details
+            Patient counseling details
 
         Returns
         -------
-        tuple[bool,str]
+        tuple[bool,str,str]
             bool
                 Was there a counseling
             str
                 When was the counseling
+            str
+                Counseling id
 
         Notes
         -----
@@ -741,9 +764,16 @@ class _Sub_2(Submeasure):
         """
         screening = row['screening_datetime']
         numerator = False
-        valid_counselings = (counselings['encounter_datetime'][counselings['encounter_datetime'] >= screening])
-        counseling = valid_counselings.min()
-        offset = (counseling - screening).days
+        counseling_after_screening = screening <= counselings['encounter_datetime']
+        counseling_within_2_months = screening + pd.DateOffset(months=2) >= counselings['encounter_datetime']
+        # allow some flexibility for the counseling but try to keep the time frame reasonable
+        counseling_mask = counseling_after_screening & counseling_within_2_months
+        valid_counselings = counselings[counseling_mask]
+        if not len(valid_counselings): # break out if there are no valid counselings
+            return False,'Counseling did not happen',None
+        first_counseling_date = valid_counselings['encounter_datetime'].head(1).item() # counselings are sorted by datetime in _find_performance_met()
+        first_counseling_id = valid_counselings['encounter_id'].head(1).item()
+        offset = (first_counseling_date - screening).days
         if offset == 0:
             numerator = True
             time_delay = 'Counseling happened immediately'
@@ -752,8 +782,8 @@ class _Sub_2(Submeasure):
         elif offset <= 30:
             time_delay = 'Counseling happened within a month'
         else:
-            time_delay = 'Counseling did not happen'
-        return counseling, numerator, time_delay
+            time_delay = 'Counseling happened within two months'
+        return numerator, time_delay, first_counseling_id
 
     @override
     def _set_stratification(self) -> None:
@@ -797,7 +827,7 @@ class _Sub_2(Submeasure):
         """
         Removes all columns that were used to calculate data points 
         """
-        self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','numerator','numerator_time','medicaid']].copy()
+        self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','counseling_id','numerator','numerator_desc','medicaid']].copy()
 
     @override
     def _trim_unnecessary_stratification_data(self) -> None:
