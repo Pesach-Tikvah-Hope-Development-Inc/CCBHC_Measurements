@@ -13,6 +13,15 @@ ASC_Demographic_Data = {
     "race": (str, 'object'),
     "ethnicity": (str, 'object')
 }
+CDF_Populace = {
+    "patient_id": (str, 'object'),
+    "encounter_id": (str, 'object'),
+    "encounter_datetime": ("datetime64[ns]",),
+    "patient_DOB": ("datetime64[ns]",),
+    "follow_up": (bool,),
+    "total_score": (float,), 
+    "screening_type": (str, 'object')
+}
 Demographic_Data = {
     "patient_id": (str, 'object'),
     "race": (str, 'object'),
@@ -66,21 +75,23 @@ def get_schema(df_name:str) -> dict[str:type]:
             Data type
     """
     match df_name:
-        case "PHQ9":
-            return PHQ9
+        case "Alcohol_Encounters":
+            return Alcohol_Encounters
+        case "ASC_Demographic_Data":
+            return ASC_Demographic_Data
+        case "CDF_Populace":
+            return CDF_Populace
         case "Demographic_Data":
             return Demographic_Data
         case "Diagnostic_History":
             return Diagnostic_History
         case "Insurance_History":
             return Insurance_History
-        case "Alcohol_Encounters":
-            return Alcohol_Encounters
-        case "ASC_Demographic_Data":
-            return ASC_Demographic_Data
         case "SDOH_Screenings":
             return SDOH_Screenings
         case "Populace":
             return Populace
+        case "PHQ9":
+            return PHQ9
         case None:
             return None

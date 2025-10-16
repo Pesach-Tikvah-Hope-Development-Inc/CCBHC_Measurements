@@ -8,13 +8,13 @@ ASC_sub_2 = [
     None
 ]
 CDF_AD_sub_1 = [
-    "Populace",
+    "CDF_Populace",
     "Diagnostic_History",
     "Demographic_Data",
     "Insurance_History"
 ]
 CDF_CH_sub_1 = [
-    "Populace",
+    "CDF_Populace",
     "Diagnostic_History",
     "Demographic_Data",
     "Insurance_History"

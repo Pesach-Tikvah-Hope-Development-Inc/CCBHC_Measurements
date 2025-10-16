@@ -35,13 +35,20 @@ class Validator:
             return True, None
         
         errors = {}
-
+        
+        # check the number of Dataframes
         if len(dataframes) != len(self.SCHEMAS):
             return False, ValueError(f"Expected {len(self.SCHEMAS)} dataframes, got {len(dataframes)}.")
 
         for i, (df_name, col_specs) in enumerate(self.SCHEMAS.items()):
             df = dataframes[i]
             errors[df_name] = []
+            # check number of columns
+            expected = len(col_specs.items())
+            actual = len(df.columns)
+            if expected != actual:
+                errors[df_name].append(f"Expected {expected} columns, got {actual}")
+            # check column dtypes
             for col, dtype in col_specs.items():
                 if col not in df.columns:
                     errors[df_name].append(f"Missing column: {col}")
