@@ -554,8 +554,8 @@ class _Sub_1(Submeasure):
         pd.Series
             A boolean series showing if the insurance plan contains medicaid
         """
-        return plan.str.lower().contains('medicaid')
-    
+        return plan.str.contains('medicaid',case=False)
+
     def __replace_medicaid_values(self, col:pd.Series) -> pd.Series:
         """
         Replaces Boolean values with numerical values
