@@ -720,7 +720,6 @@ class CDF_AD(Measurement):
         ValueError
             When the submeasure data isn't properly formatted
         """ 
-        print("test")
         try:
             return self.__sub1__.get_submeasure_data()
         except Exception:
