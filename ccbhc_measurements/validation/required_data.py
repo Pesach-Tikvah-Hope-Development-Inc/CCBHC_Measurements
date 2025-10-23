@@ -31,7 +31,7 @@ SDOH_sub_1 = [
     "Insurance_History"
 ]
 
-def get_required_dataframes(submeasure_name: str) -> list[str]:
+def get_required_dataframes(submeasure_name:str) -> list[str]:
     """
     Gets the required Dataframes for a given submeasure
 

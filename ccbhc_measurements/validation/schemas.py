@@ -49,7 +49,8 @@ Populace = {
     "patient_id": (str, 'object'),
     "encounter_id": (str, 'object'),
     "encounter_datetime": ("datetime64[ns]",),  
-    "patient_DOB": ("datetime64[ns]",)         
+    "patient_DOB": ("datetime64[ns]",),
+    "is_sdoh": (bool,)
 }
 SDOH_Screenings = {
     "patient_id": (str, 'object'),

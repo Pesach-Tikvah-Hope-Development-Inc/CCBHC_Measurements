@@ -1,8 +1,8 @@
 import pandas as pd
-from datetime import datetime
 from ccbhc_measurements.compat.typing_compat import override
 from ccbhc_measurements.abstractions.submeasure import Submeasure
 from ccbhc_measurements.abstractions.measurement import Measurement
+from datetime import datetime
 
 class _Sub_1(Submeasure):
     """
@@ -144,10 +144,11 @@ class _Sub_1(Submeasure):
         last       = self.__get_last_screening(screenings)
         self.__merge_screenings_into_populace(last)
         self._apply_time_constraint()    
+        self.__create_numerator_desc()
 
     def __get_screenings(self) -> pd.DataFrame:
         """
-        Build the table of all TRUE isSDOH encounters from __DATA__
+        Build the table of all TRUE is_sdoh encounters from __DATA__
         """
         full = self.__DATA__.copy()
         full['patient_measurement_year_id'] = self.__create_measurement_year_id(
@@ -199,6 +200,28 @@ class _Sub_1(Submeasure):
         over_18 = self.__populace__[self.__populace__['age'] > 18].copy()
         over_18['numerator'] = over_18['screening_date'].notna()
         self.__populace__ = pd.concat([age_18,over_18])
+    
+    def __create_numerator_desc(self) -> None:
+        """
+        Assigns numerator_desc based on screening presence, age logic, and measurement year rules.
+        """
+        descs = []
+        for _, row in self.__populace__.iterrows():
+            # No screening at all!
+            if pd.isna(row['screening_date']):
+                descs.append("No screening recorded")
+            # Screening exists but occurred before the 18th birthday (not valid for 18-year-olds)
+            elif row['age'] == 18 and row['screening_date'] < row['patient_DOB'] + pd.DateOffset(years=18):
+                descs.append("Screening occurred before 18th birthday")
+            # Valid screening: 
+            # age > 18 with any screening 
+            # or
+            # (b) age 18 and screening was after birthday
+            elif row['numerator']:
+                descs.append("Screened with valid standardized tool")
+            else:
+                descs.append("No screening recorded")
+        self.__populace__['numerator_desc'] = descs
 
     @override
     def _set_stratification(self) -> None:
@@ -304,7 +327,7 @@ class _Sub_1(Submeasure):
         medicaid_data = self.__find_patients_with_only_medicaids(medicaid_data)
         return medicaid_data
     
-    def __find_plans_with_medicaid(self,plan:pd.Series) -> pd.Series:
+    def __find_plans_with_medicaid(self, plan:pd.Series) -> pd.Series:
         """
         Checks if the insurance name contains medicaid
         
@@ -371,7 +394,7 @@ class _Sub_1(Submeasure):
         """ 
         Removes all columns that were used to calculate data points
         """
-        self.__populace__ = self.__populace__[['patient_measurement_year_id', 'patient_id', 'numerator', 'screening_id', 'screening_date', 'medicaid']].drop_duplicates(subset='patient_measurement_year_id')
+        self.__populace__ = self.__populace__[['patient_measurement_year_id', 'patient_id', 'numerator', 'numerator_desc','screening_id', 'screening_date', 'medicaid']].drop_duplicates(subset='patient_measurement_year_id')
 
     @override
     def _trim_unnecessary_stratification_data(self) -> None:
@@ -410,13 +433,8 @@ class SDOH(Measurement):
     >>>     "patient_id": (str, 'object'),
     >>>     "encounter_id": (str, 'object'),
     >>>     "encounter_datetime": ("datetime64[ns]",),  
-    >>>     "patient_DOB": ("datetime64[ns]",)  
-    >>> }
-
-    >>> SDOH_Screenings = {
-    >>>     "patient_id": (str, 'object'),
-    >>>     "screening_id": (str, 'object'),
-    >>>     "screening_date": ("datetime64[ns]",)
+    >>>     "patient_DOB": ("datetime64[ns]",),
+    >>>     "is_sdoh": (bool,)
     >>> }
 
     >>> Demographic_Data = {
