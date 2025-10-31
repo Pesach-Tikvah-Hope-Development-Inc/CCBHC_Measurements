@@ -139,7 +139,7 @@ insurance_history = pd.DataFrame({
 insurance_history['start_datetime'] = pd.to_datetime(insurance_history['start_datetime'])
 insurance_history['end_datetime'] = pd.to_datetime(insurance_history['end_datetime'])
 
-CDF_CH_sub_1_data = [
+data = [
     populace,
     diagnostic_history,
     demographic_data,
