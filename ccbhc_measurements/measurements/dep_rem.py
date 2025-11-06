@@ -185,9 +185,15 @@ class _Sub_1(Submeasure):
     @override
     def _apply_time_constraint(self) -> None:
         """
-        Doc String
+        Creates the earliest and latest possible remission date
+
+        "The window for assessing the Six Month measure, however, is at 6 months (+/- 60 days) or 4 to 8 months after
+        Index Event Date."
         """
-        pass
+        frequency = relativedelta(months=6)
+        range = relativedelta(days=60)
+        self.__index_visits__['earliest_remission'] = self.__index_visits__['encounter_datetime'].dt.date + frequency - range
+        self.__index_visits__['latest_remission'] = self.__index_visits__['encounter_datetime'].dt.date + frequency + range
     
     @override
     def _find_performance_met(self) -> None:
@@ -195,11 +201,7 @@ class _Sub_1(Submeasure):
         All clients in the denominator who achieved Remission at Six Months
         as demonstrated by a Six Month (+/- 60 days) PHQ-9 score of less than five
         """
-        frequency = relativedelta(months=6)
-        range = relativedelta(days=60)
-        self.__index_visits__['earliest_remission'] = self.__index_visits__['encounter_datetime'].dt.date + frequency - range
-        self.__index_visits__['latest_remission'] = self.__index_visits__['encounter_datetime'].dt.date + frequency + range
-        self.__index_visits__[['numerator','numerator_reason']] = self.__index_visits__.apply(lambda row:(pd.Series(self.__remission_check(row))),axis=1)
+        self.__index_visits__[['numerator','numerator_reason','delta_phq9']] = self.__index_visits__.apply(lambda row:(pd.Series(self.__remission_check(row))),axis=1)
         self.__overwrite_populace()
 
     def __remission_check(self,iv:pd.Series) -> tuple[bool,str]:
@@ -219,19 +221,44 @@ class _Sub_1(Submeasure):
             str
                 numerator description
         """
+        # get all PHQs from the index patient
         index_group = self.__populace__[self.__populace__['patient_id'] == iv['patient_id']].copy()
+        # filter the PHQs in the group to within the remission range
         remission_group = index_group[(index_group['encounter_datetime'].dt.date >= iv['earliest_remission']) & (index_group['encounter_datetime'].dt.date <= (iv['latest_remission']))]
         has_remission = len(remission_group[remission_group['total_score'] < 5]) >= 1
         if has_remission:
             reason = "Has Remission"
+            # all encounters are sorted by date in _set_dataframes, so [-1] is the most recent
+            delta = self.__get_delta_phq(iv['total_score'],remission_group['total_score'].values[-1])
         elif remission_group.empty: # the df could be empty b/c eiter the date filter OR nothing was given after the earliest remission date
             if datetime.now().date() < iv['earliest_remission']:
                 reason = "Remission Period not Reached"
             else:
                 reason = "No PHQ-9 Follow Up"
+            delta = None
         else: # must have given a follow up, but scored too high
             reason = "No Remission"
-        return has_remission,reason
+            # all encounters are sorted by date in _set_dataframes, so [-1] is the most recent
+            delta = self.__get_delta_phq(iv['total_score'],remission_group['total_score'].values[-1])
+        return has_remission,reason,delta
+
+    def __get_delta_phq(self, index_score:int, recent_score:int) -> int:
+        """
+        Calulates the delta of the patient's phq9s
+
+        Parameters
+        ----------
+        index_score
+            Index phq9 score
+        recent_score
+            Recent phq9 score
+
+        Returns
+        -------
+        int
+            Delta_phq
+        """
+        return index_score - recent_score
 
     def __overwrite_populace(self) -> None:
         """
@@ -395,7 +422,7 @@ class _Sub_1(Submeasure):
         """
         Removes all columns that were used to calculate data points 
         """
-        self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','encounter_id','numerator','numerator_reason','age','medicaid']].drop_duplicates()
+        self.__populace__ = self.__populace__[['patient_id','patient_measurement_year_id','encounter_id','numerator','numerator_reason','delta_phq9','age','medicaid']].drop_duplicates()
 
     @override
     def _trim_unnecessary_stratification_data(self) -> None:
