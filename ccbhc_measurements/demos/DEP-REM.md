@@ -158,6 +158,8 @@ In the output data, "numerator_reason" can be 1 of 4 values
 - No PHQ-9 Follow Up : Indicates that the client above nine six months ago, but no follow up PHQ9 was given
 - No Remission : Indicates that the client above nine six months ago, a follow up PHQ9 was given but the client did not score under five
 
+In the output data, "delta_phq9" is calculated by subtracting the most recent phq9 score within the remission period (6 months +/- 60 days) from the index phq9 score. **So if the recent phq9 has a higher score, the delta will be negative.**
+
 <hr>
 
 [Back to Top](#ccbhc-measurements)
