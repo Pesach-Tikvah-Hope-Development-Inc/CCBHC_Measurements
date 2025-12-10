@@ -25,6 +25,12 @@ insurances = [
     "Medicare",
     "Medicaid"
     ]
+icd_10_codes = [
+    'F33.0',
+    'F33.2',
+    'F34.8',
+    'F34.0',
+]
 patient_id = random.sample(range(10_000,99_999),pop_size)
 dob = [(datetime(1990, 1, 1) + timedelta(days=random.randint(0, (datetime(2020, 12, 31) - datetime(1990, 1, 1)).days))) for _ in range(pop_size)]
 
@@ -37,8 +43,9 @@ total_score = random.choices(scores,k=pop_size * encouters_per_patient)
 
 # make rand values for Diagnosis
 diagnosis_patient_id = random.choices(patient_id,k=100)
-diagnosis_date = [(datetime(2024, 1, 1) + timedelta(days=random.randint(0, 365))) for _ in range(100)]
-diagnosis = ["F34.0"]*100
+diagnosis_start_datetime = [(datetime(2024, 1, 1) + timedelta(days=random.randint(0, 365))) for _ in range(100)]
+diagnosis_end_datetime = [dt + relativedelta(months=6) for dt in diagnosis_start_datetime]
+diagnosis = random.choices(icd_10_codes,k=100)
 
 # make rand values for Demograpics
 race = random.choices(races,k=pop_size)
@@ -63,9 +70,12 @@ phq_data.encounter_id = phq_data.encounter_id.astype(str)
 
 diagnosis_data = pd.DataFrame({
                     "patient_id":diagnosis_patient_id,
-                    "encounter_datetime":diagnosis_date,
+                    "diagnosis_start_datetime":diagnosis_start_datetime,
+                    "diagnosis_end_datetime":diagnosis_end_datetime,
                     "diagnosis":diagnosis})
 diagnosis_data.patient_id = diagnosis_data.patient_id.astype(str)
+diagnosis_data['diagnosis_start_datetime'] = pd.to_datetime(diagnosis_data['diagnosis_start_datetime'])
+diagnosis_data['diagnosis_end_datetime'] = pd.to_datetime(diagnosis_data['diagnosis_end_datetime'])
 
 demographic_data = pd.DataFrame({
                     "patient_id":patient_id,
