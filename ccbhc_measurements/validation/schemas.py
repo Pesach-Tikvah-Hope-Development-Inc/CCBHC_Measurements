@@ -90,6 +90,8 @@ def get_schema(df_name:str) -> dict[str:type]:
             return CDF_Populace
         case "Demographic_Data":
             return Demographic_Data
+        case "Dep_Rem_Diagnostic_History":
+            return Dep_Rem_Diagnostic_History
         case "Diagnostic_History":
             return Diagnostic_History
         case "Insurance_History":
