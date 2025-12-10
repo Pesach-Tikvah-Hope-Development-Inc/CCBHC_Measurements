@@ -10,15 +10,15 @@
 
 ## Measurement Definition
 
-The DEP-REM-6 measure calculates the Percentage of clients (12 years of age or older) with
-Major Depression or Dysthymia who reach Remission Six Months (+/- 60 days) after an Index
+The DEP-REM-6 measure calculates the Percentage of clients (12 years of age or older) with an active
+Major Depression or Dysthymia AND a PHQ9 with a score above 9 who reach Remission Six Months (+/- 60 days) after an Index
 Event Date
 
 [Click here to see SAMHSA's definitions](https://www.samhsa.gov/sites/default/files/ccbhc-quality-measures-technical-specifications-manual.pdf)
 
 ### SubMeasure 1
 
-Percentage of clients who scored above nine on a PHQ-9 and scored under five six months later 
+Percentage of clients with an active Major Depression or Dysthymia AND who scored above nine on a PHQ-9 and scored under five six months later 
 
 ## Required Data
 
@@ -46,8 +46,9 @@ The PHQ9s dataframe must have the following columns and datatypes
 
 The diagnosis dataframe must have the following columns and datatypes
 - patient_id : str - Unique Patient Identifier
-- encounter_datetime : datetime64[ns] - Date of visit
-- diagnosis : str - ICD10 Code to determine whether patients are excluded from the measure (for encounters with mulitple diagnoses, duplicate the entire line and change the ICD10 code to the new diagnosis)
+- diagnosis_start_datetime : datetime64[ns] - Date when diagnosis occured
+- diagnosis_end_datetime : datetime64[ns] - Date of diagnosis became inactive
+- diagnosis : str - ICD10 Code to determine whether patients are to be included or excluded from the measure (for encounters with mulitple diagnoses, duplicate the entire line and change the ICD10 code to the new diagnosis)
 
 #### Demographic Data
 
@@ -123,7 +124,8 @@ phq_data['encounter_datetime'] = pd.to_datetime(phq_data['encounter_datetime'])
 phq_data['total_score'] = phq_data['total_score'].astype(int)
 
 diagnosis_data['patient_id'] = diagnosis_data['patient_id'].astype(str)
-diagnosis_data['encounter_datetime'] = pd.to_datetime(diagnosis_data['encounter_datetime'])
+diagnosis_data['diagnosis_start_datetime'] = pd.to_datetime(diagnosis_data['encounter_datetime'])
+diagnosis_data['diagnosis_end_datetime'] = pd.to_datetime(diagnosis_data['encounter_datetime'])
 diagnosis_data['diagnosis'] = diagnosis_data['diagnosis'].astype(str)
 
 demographic_data['patient_id'] = demographic_data['patient_id'].astype(str)
@@ -151,6 +153,8 @@ for name, data in results.items():
 ```
 
 ## Notes
+
+If a diagnosis does not have an end date, it will be considered as still active.
 
 In the output data, "numerator_reason" can be 1 of 4 values
 - Has Remission : Indicates that the client scored less than five on a follow up PHQ9
