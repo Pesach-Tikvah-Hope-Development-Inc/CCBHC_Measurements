@@ -23,7 +23,7 @@ class _Sub_1(Submeasure):
             A validated list of dataframes
         """
         self.__DATA__ = dataframes[0].sort_values('encounter_datetime').copy()
-        self.__DIAGNOSIS__ = dataframes[1].sort_values('encounter_datetime').copy()
+        self.__DIAGNOSIS__ = dataframes[1].sort_values('diagnosis_start_datetime').copy()
         self.__DEMOGRAPHICS__ = dataframes[2].sort_values('patient_id').copy()
         self.__INSURANCE__ = dataframes[3].sort_values('patient_id').copy()
 
@@ -45,16 +45,98 @@ class _Sub_1(Submeasure):
     def __set_index_visits(self) -> None:
         """
         Filters populace and finds the index visit for every patient
+
+        NOTES
+        -----
+        For a patient to have an index visit, they must have:
+        - A PHQ9 score > 9
+        - An active Major Depression or Dysthymia diagnosis
         """
-        # Index Event Date:
-        # The date on which the first instance of elevated PHQ-9 or PHQ-9M greater than nine
-        # AND diagnosis of Depression or Dysthymia occurs during the Measurement Year
-        index_visits = self.__populace__[self.__populace__['total_score'] > 9].copy() # get visits with scores greater than 9
-        index_visits['measurement_year'] = index_visits['encounter_datetime'].dt.year # create year field to track returning patients across multiple years
-        index_visits['patient_measurement_year_id'] = index_visits['patient_id'].astype(str) + '-' + index_visits['measurement_year'].astype(str)
-        index_visits = index_visits.sort_values('encounter_datetime') # reorder visits by date
-        index_visits = index_visits.drop_duplicates('patient_measurement_year_id',keep='first') # keep the first index visit per patient per year
-        self.__index_visits__ = index_visits
+        phq9s = self.__get_phq9_over_9()
+        diagnosis = self.__get_depression_dysthymia_diagnoses()
+        self.__index_visits__ = self.__compare_phq9_to_diagnosis(phq9s, diagnosis)
+        
+    def __get_phq9_over_9(self) -> pd.DataFrame:
+        """
+        Calculates the first occurance of a PHQ9 score above 9 per patient per year
+
+        Returns
+        -------
+        pd.Dataframe
+            PHQ9 details
+        """
+        phq9s = self.__populace__[self.__populace__['total_score'] > 9].copy()
+        phq9s['patient_measurement_year_id'] = self.__create_patient_measurement_year_id(phq9s['patient_id'],phq9s['encounter_datetime'])
+        phq9s = phq9s.drop_duplicates('patient_measurement_year_id',keep='first') # populace gets sorted durring instantiation
+        return phq9s
+
+    def __get_depression_dysthymia_diagnoses(self) -> pd.DataFrame:
+        """
+        Filters all diagnoses to the first occurance of a depression or dysthamia
+
+        Returns
+        -------
+        pd.Dataframe
+            First depression or dysthamia per patient
+        """
+        diagnosis = self.__DIAGNOSIS__.copy()
+        icd_codes = [
+            'F32.0','F32.1','F32.2','F32.3','F32.4','F32.5','F32.9',
+            'F33.0','F33.1','F33.2','F33.3','F33.40','F33.41','F33.42','F33.9',
+            'F34.1'
+        ]
+        valid_icd_diagnoses = diagnosis['diagnosis'].isin(icd_codes)
+        diagnosis = diagnosis[valid_icd_diagnoses].copy()
+        # If a diagnosis has no end date, then it is still considered active 
+        diagnosis['diagnosis_end_datetime'] = diagnosis['diagnosis_end_datetime'].fillna(datetime.now())
+        return diagnosis
+
+    def __compare_phq9_to_diagnosis(self, phq9:pd.DataFrame, diagnosis:pd.DataFrame) -> pd.DataFrame:
+        """
+        Matches all phq9s to their patients diagnosis dates
+
+        Parameters
+        ----------
+        phq9
+            All phq9s
+        diagnsosis
+            All diagnoses of depression or dysthymia
+
+        Returns
+        -------
+        pd.Dataframe
+            Phq9s that were given at the same time as an active diagnoses of depression or dysthymia
+        """
+        phq9['active_diagnosis'] = phq9.apply(lambda phq:
+                                                self.__phq9_with_diagnosis(
+                                                    phq,
+                                                    diagnosis[diagnosis['patient_id'] == phq['patient_id']]
+                                                ),
+                                                axis=1
+                                            )
+        return phq9[phq9['active_diagnosis']]
+
+    def __phq9_with_diagnosis(self, phq:pd.Series, diagnosis:pd.DataFrame) -> bool:
+        """
+        Checks if a PHQ9 was given within an active diagnosis timeframe
+
+        Parameters
+        ----------
+        phq9
+            All phq9s
+        diagnsosis
+            All diagnoses of depression or dysthymia
+
+        Returns
+        -------
+        bool
+            Was there an active diagnosis at the same time as the phq9
+        """
+        if diagnosis.empty: # break out early if the patient doesn't have any diagnoses
+            return False
+        start_validity = diagnosis['diagnosis_start_datetime'] <= phq['encounter_datetime']
+        end_validity = diagnosis['diagnosis_end_datetime'] >= phq['encounter_datetime']
+        return bool((start_validity & end_validity).any())
 
     def __create_patient_measurement_year_id(self, ids:pd.Series, dates:pd.Series) -> pd.Series:
         """
@@ -165,7 +247,7 @@ class _Sub_1(Submeasure):
         """
         # a visit is only excluded if the exclusion happened before the index visit's remission year/range
         # therefore it's needed to filter the exclusions to only the ones that occured durring that period
-        exclusions.rename(columns={'encounter_datetime':'exclusion_date'},inplace=True)
+        exclusions.rename(columns={'diagnosis_start_datetime':'exclusion_date'},inplace=True)
         self.__index_visits__ = self.__index_visits__.merge(exclusions,how ='left', on='patient_id')
         exclusion_ids = self.__index_visits__[self.__index_visits__['exclusion_date'] <= self.__index_visits__['end_exclusion_range']]['patient_measurement_year_id'].drop_duplicates().to_list()
         return exclusion_ids

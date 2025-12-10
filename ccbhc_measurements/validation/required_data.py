@@ -21,7 +21,7 @@ CDF_CH_sub_1 = [
 ]
 DEP_REM_sub_1 = [
     "PHQ9",
-    "Diagnostic_History",
+    "Dep_Rem_Diagnostic_History",
     "Demographic_Data",
     "Insurance_History"
 ]

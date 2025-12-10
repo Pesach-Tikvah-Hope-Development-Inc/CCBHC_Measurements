@@ -27,6 +27,12 @@ Demographic_Data = {
     "race": (str, 'object'),
     "ethnicity": (str, 'object')
 }
+Dep_Rem_Diagnostic_History = {
+    "patient_id": (str, 'object'),
+    "diagnosis_start_datetime": ("datetime64[ns]",),
+    "diagnosis_end_datetime": ("datetime64[ns]",),
+    "diagnosis": (str, 'object')
+}
 Diagnostic_History = {
     "patient_id": (str, 'object'),
     "encounter_datetime": ("datetime64[ns]",),
