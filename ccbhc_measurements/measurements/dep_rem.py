@@ -553,7 +553,8 @@ class Dep_Rem(Measurement):
 
     >>> Diagnostic_History = {
     >>>     "patient_id": (str, 'object'),
-    >>>     "encounter_datetime": ("datetime64[ns]",),
+    >>>     "diagnosis_start_datetime": ("datetime64[ns]",),
+    >>>     "diagnosis_end_datetime": ("datetime64[ns]",),
     >>>     "diagnosis": (str, 'object')
     >>> }
  
