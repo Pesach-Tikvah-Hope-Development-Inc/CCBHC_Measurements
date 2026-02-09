@@ -652,12 +652,15 @@ class _Sub_2(Submeasure):
         """
         Calculates if patients are healthy or unhealthy alcohol users
         """
+        # set default unhealthy_alcohol_use to False and OR it with the previous 
+        # screening results to keep the integrity of previous screening logics
+        self.__populace__['unhealthy_alcohol_use'] = False
         for screener in alcohol_screeners:
             df = self.__populace__[self.__populace__['screening'] == screener].copy()
             screening_logic = get_screening_strategy(screener)
             df['unhealthy_alcohol_use'] = screening_logic(df)
             df = df[['patient_measurement_year_id','unhealthy_alcohol_use']].copy()
-            self.__populace__ = self.__populace__.combine_first(df)
+            self.__populace__['unhealthy_alcohol_use'] = self.__populace__['unhealthy_alcohol_use'] | df['unhealthy_alcohol_use']
 
     def __filter_unhealthy_alcohol_users(self) -> None:
         """
