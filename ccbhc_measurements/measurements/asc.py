@@ -86,7 +86,7 @@ class _Sub_1(Submeasure):
         """
         visits = self.__REGULAR_VISITS__.copy()
         visits['patient_measurement_year_id'] = self.__create_patient_measurement_year_id(visits['patient_id'],visits['encounter_datetime'])
-        multiple_visits = (visits.groupby('patient_measurement_year_id')['patient_id'].size() >= 2).reset_index()['patient_measurement_year_id'].to_list()
+        multiple_visits = visits[visits['patient_measurement_year_id'].duplicated()]['patient_measurement_year_id'].unique()
         self.__populace__ = visits[visits['patient_measurement_year_id'].isin(multiple_visits)].copy()
 
     def __create_patient_measurement_year_id(self, ids:pd.Series, dates:pd.Series) -> pd.Series:
@@ -875,6 +875,7 @@ class ASC(Measurement):
     >>>     "patient_DOB": ("datetime64[ns]",),
     >>>     "encounter_id": (str, 'object'),
     >>>     "encounter_datetime": ("datetime64[ns]",),
+    >>>     "cpt_code": (str, 'object'),
     >>>     "screening": (str, 'object'),
     >>>     "score": (int, float),
     >>> }

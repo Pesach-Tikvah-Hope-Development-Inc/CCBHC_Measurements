@@ -5,7 +5,7 @@ with open("README.md","r") as file:
 
 setuptools.setup(
     name="ccbhc_measurements",
-    version="2026.2.9",
+    version="2026.2.20",
     description="An easy way to calculate CCBHC measurements.",
     long_description=read_me,
     long_description_content_type="text/markdown",
