@@ -226,6 +226,15 @@ class _Sub_1(Submeasure):
             return False
 
         self.__populace__['positive_screening'] = self.__populace__.apply(is_positive, axis=1)
+   
+        # Forward-only follow-up matcher using INPUT 'follow_up':
+        # For each POSITIVE screening row in the (deduped) working df, look in the FULL
+        # encounter table for ANY encounter for the same patient where follow_up == True
+        # and encounter_datetime is within 0..14 days AFTER the screening.
+        # If found, set has_matched_follow_up=True on the screening row.
+
+        # NOTE: We do NOT write a 'follow_up' column into the output; we only set
+        # has_matched_follow_up on the screening rows.
     def __match_follow_ups_to_screenings(self) -> None:
         """
         Matches follow up encounters to positive screenings within 14 days
@@ -347,61 +356,6 @@ class _Sub_1(Submeasure):
         df['numerator'] = True
         df['numerator_desc'] = 'Negative screening'
         return df
-
-    # def __create_numerator_desc(self) -> None:
-    #     """
-    #     Creates numerator_desc for each screening result
-    #     """
-    #     # use a copy of the current populace so we don't modify the original dataframe
-    #     df = self.__populace__.copy()
-    #     # If the total_score is NaN, then the screening was not recorded
-    #     no_screen = df[df['total_score'].isna()].copy()
-    #     no_screen['numerator'] = False
-    #     no_screen['numerator_desc'] = 'No screening recorded'
-    #     # Invalid or missing score when total_score is not NaN but positive_screening is NaN
-    #     invalid = df[df['total_score'].notna() & df['positive_screening'].isna()].copy()
-    #     invalid['numerator'] = False
-    #     invalid['numerator_desc'] = 'Invalid or missing screening score'
-    #     used = no_screen.index.union(invalid.index)
-    #     rem  = df.drop(used)
-    #     # Negative screens
-    #     neg = self.__set_negative_numerators(rem[~rem['positive_screening']])
-    #     # Positive screens
-    #     pos = rem[rem['positive_screening']].copy()
-    #     pos = self.__set_positive_numerators(pos)
-    #     # Overwrite the original populace with the annotated rows
-    #     self.__populace__ = pd.concat([no_screen, invalid, neg, pos], ignore_index=True)
-
-    # def __set_negative_numerators(self, df:pd.DataFrame) -> pd.DataFrame:
-    #     """
-    #     Adds numerator fields for patients with negative screening results
-
-    #     Parameters
-    #     ----------
-    #     df
-    #         The screenings data 
-
-    #     Returns
-    #     -------
-    #     pd.DataFrame
-    #         The dataframe containing all patients with negative screening results 
-    #     """
-    #     df = df.copy()
-    #     df['numerator'] = True
-    #     df['numerator_desc'] = 'Negative screening'
-    #     return df
-    
-    # def __set_positive_numerators(self, df: pd.DataFrame) -> pd.DataFrame:
-    #     """
-    #     Uses the SQL-computed `follow_up` flag to set numerator and description.
-    #     """
-    #     df = df.copy()
-    #     df['numerator'] = df['follow_up']
-    #     df['numerator_desc'] = df['follow_up'].map({
-    #         True:  'Positive screening with follow up',
-    #         False: 'Positive screening without follow-up'
-    #     })
-    #     return df
 
     @override
     def _apply_time_constraint(self) -> None:
