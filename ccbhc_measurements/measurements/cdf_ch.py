@@ -60,7 +60,6 @@ class _Sub_1(Submeasure):
         """
         self.__initialize_populace()
         self.__populace__['patient_measurement_year_id'] = self.__create_measurement_year_id(self.__populace__['patient_id'], self.__populace__['encounter_datetime'])
-        self.__populace__ = self.__populace__.sort_values(by=['patient_measurement_year_id','encounter_datetime']).drop_duplicates('patient_measurement_year_id',keep='first')
 
     def __initialize_populace(self) -> None:
         """
@@ -200,6 +199,7 @@ class _Sub_1(Submeasure):
         self.__determine_screenings_results()
         self.__match_follow_ups_to_screenings()
         self.__create_numerator_desc()
+        self.__get_numerator_encounter()
 
     def __assign_screening_encounter_id(self) -> None:
         """
@@ -347,6 +347,31 @@ class _Sub_1(Submeasure):
         df['numerator_desc'] = 'Negative screening'
         return df
 
+    def __get_numerator_encounter(self) -> None:
+        """
+        Resolves multiple encounters per patient within a measurement year down
+        to a single representative encounter based on numerator priority.
+        """
+        # create a priority for patients with multiple encounters/numerator possibilities throughout the measurement year
+        priority = [
+            "Positive screening with follow up",
+            "Positive screening without matched follow-up",
+            "Negative screening",
+            "No screening recorded",
+        ]
+
+        self.__populace__["numerator_desc"] = pd.Categorical(
+            self.__populace__["numerator_desc"],
+            categories=priority,
+            ordered=True
+        )
+        # keep the highest occuring priority per patient per year
+        self.__populace__ = self.__populace__.sort_values(
+            by="numerator_desc"
+        ).drop_duplicates(
+            subset='patient_measurement_year_id',
+            keep='first'
+        )
 
     @override
     def _apply_time_constraint(self) -> None:

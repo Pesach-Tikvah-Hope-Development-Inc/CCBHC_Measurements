@@ -8,14 +8,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ccbhc_measurements"
 description = "An easy way to calculate CCBHC measurements."
-version = "2026.2.20"
+version = "2026.6.1"
 readme = "README.md"
 authors = [
     { name = "Pesach Tikvah Hope Development Inc.", email = "agursky@pesachtikvah.org" }
 ]
 maintainers = [
     { name = "Alex Gursky", email = "agursky@pesachtikvah.org" },
-    { name = "Max Friedman", email = "mfriedman@pesachtikvah.org" },
     { name = "Yisroel Len", email = "ylen@pesachtikvah.org" }
 ]
 license = {file = 'LICENSE'}
