@@ -227,53 +227,147 @@ class _Sub_1(Submeasure):
 
     def __match_follow_ups_to_screenings(self) -> None:
         """
-        Matches follow up encounters to positive screenings within 14 days
+        Flags positive screenings that have a qualifying follow up encounter within 14 days
+        """
+        populace = self.__initialize_follow_up_flag(self.__populace__.copy())
+        positive_screenings = self.__get_positive_screenings(populace)
+        follow_up_encounters = self.__get_follow_up_encounters(self.__DATA__.copy())
+        matched_screening_ids = self.__find_matched_screening_ids(positive_screenings, follow_up_encounters)
+        self.__populace__ = self.__set_matched_follow_ups(populace, matched_screening_ids)
+
+    def __initialize_follow_up_flag(self, populace:pd.DataFrame) -> pd.DataFrame:
+        """
+        Ensures the has_matched_follow_up column exists
+
+        Parameters
+        ----------
+        populace
+            The deduped denominator set (one row per patient measurement year)
+
+        Returns
+        -------
+        pd.DataFrame
+            The populace with a boolean has_matched_follow_up column
+
+        Notes
+        -----
+        Every screening starts unmatched and only flips to True once a qualifying follow up is found,
+        so unmatched screenings fall through to numerator=False without any extra handling
+        """
+        if 'has_matched_follow_up' not in populace.columns:
+            populace['has_matched_follow_up'] = False
+        return populace
+
+    def __get_positive_screenings(self, populace:pd.DataFrame) -> pd.DataFrame:
+        """
+        Gets the positive screenings that need a follow up matched to them
+
+        Parameters
+        ----------
+        populace
+            The deduped denominator set
+
+        Returns
+        -------
+        pd.DataFrame
+            The positive screenings (the anchors of the match)
+        """
+        is_positive = populace['positive_screening'] == True
+        return populace[is_positive][['patient_id','encounter_id','encounter_datetime']].copy()
+
+    def __get_follow_up_encounters(self, encounters:pd.DataFrame) -> pd.DataFrame:
+        """
+        Gets every encounter where a follow up plan was documented
+
+        Parameters
+        ----------
+        encounters
+            The full encounter set coming from the starting data (includes the follow_up flag per encounter)
+
+        Returns
+        -------
+        pd.DataFrame
+            Encounters flagged as follow ups
+        """
+        # without the flag there is nothing to match against, so return an empty frame
+        # giving the empty frame a real datetime dtype keeps the date math
+        # in __find_matched_screening_ids from breaking on this path
+        if 'follow_up' not in encounters.columns:
+            return pd.DataFrame({
+                'patient_id':pd.Series(dtype=str),
+                'encounter_id':pd.Series(dtype=str),
+                'encounter_datetime':pd.Series(dtype='datetime64[ns]')
+            })
+        # upstream can send the flag as 0/1, so force it into a real boolean before masking
+        encounters['follow_up'] = encounters['follow_up'].astype(bool)
+        is_follow_up = encounters['follow_up']
+        return encounters[is_follow_up][['patient_id','encounter_id','encounter_datetime']].copy()
+
+    def __find_matched_screening_ids(self, positive_screenings:pd.DataFrame, follow_up_encounters:pd.DataFrame) -> pd.Series:
+        """
+        Finds which positive screenings have a follow up encounter within the 14 day window
+
+        Parameters
+        ----------
+        positive_screenings
+            The positive screenings needing a follow up
+        follow_up_encounters
+            Encounters where a follow up plan was documented
+
+        Returns
+        -------
+        pd.Series
+            The encounter ids of every matched screening
+
+        Notes
+        -----
+        The window is forward only per the SAMHSA FAQ update,
+        so the follow up must land 0 to 14 days AFTER the screening
         """
         WINDOW_DAYS = 14
+        # pair every positive screening with all of that patient's follow up encounters
+        # the left merge keeps unmatched screenings around as NaT rows, which fail the window masks below
+        paired = positive_screenings.merge(
+            follow_up_encounters,
+            on='patient_id',
+            how='left',
+            suffixes=('_screening','_follow_up')
+        )
+        days_between = paired['encounter_datetime_follow_up'] - paired['encounter_datetime_screening']
+        follow_up_is_after_screening = days_between >= pd.Timedelta(days=0)
+        follow_up_is_within_window = days_between <= pd.Timedelta(days=WINDOW_DAYS)
+        # NOTE this mask is what rejects follow ups documented at the screening encounter itself (bug CA-02/CH-05)
+        # removing it from the filter below credits same encounter follow ups per the spec
+        follow_up_is_separate_encounter = paired['encounter_id_follow_up'] != paired['encounter_id_screening']
+        # matched = paired[follow_up_is_after_screening & follow_up_is_within_window & follow_up_is_separate_encounter]
+        matched = paired[follow_up_is_after_screening & follow_up_is_within_window]
+        # a screening only needs one qualifying follow up, so drop the extra matches
+        return matched['encounter_id_screening'].drop_duplicates()
 
-        # df = the deduped denominator set (one row per patient-year)
-        df = self.__populace__.copy()
+    def __set_matched_follow_ups(self, populace:pd.DataFrame, matched_screening_ids:pd.Series) -> pd.DataFrame:
+        """
+        Marks the matched screenings in the populace
 
-        # full = the full encounter set coming from SQL (includes follow_up flag per encounter)
-        full = self.__DATA__.copy()
+        Parameters
+        ----------
+        populace
+            The deduped denominator set
+        matched_screening_ids
+            The encounter ids of every matched screening
 
-        # ensure the boolean flag exists/typed in case upstream sends it as 0/1
-        if 'has_matched_follow_up' not in df.columns:
-            df['has_matched_follow_up'] = False
-        if 'follow_up' in full.columns:
-            full['follow_up'] = full['follow_up'].astype(bool)
-        else:
-            # if it's missing, we can't match anything; just persist and return
-            self.__populace__ = df
-            return
+        Returns
+        -------
+        pd.DataFrame
+            The populace with has_matched_follow_up set
 
-        # anchors = positive screenings from the working set
-        pos = df.loc[df['positive_screening'] == True,
-                    ['patient_id', 'encounter_id', 'encounter_datetime']].copy()
-        if pos.empty:
-            self.__populace__ = df
-            return
-
-        # candidate follow-ups: ONLY those encounters that are flagged as follow-ups
-        fu = full.loc[full['follow_up'] == True,
-                    ['patient_id', 'encounter_id', 'encounter_datetime']].copy()
-
-        # pair every positive screen with the patient's follow-up encounters
-        m = pos.merge(fu, on='patient_id', how='left',
-                    suffixes=('_scr', '_fu'))
-
-        # forward-only window: FU must occur AFTER the screen, within +14 days
-        td = m['encounter_datetime_fu'] - m['encounter_datetime_scr']
-        in_window = (td >= pd.Timedelta(days=0)) & (td <= pd.Timedelta(days=WINDOW_DAYS))
-        different_id = m['encounter_id_fu'].ne(m['encounter_id_scr'])
-
-        # any FU in window for a given screen → mark that screen as matched
-        cand = m.loc[in_window & different_id, ['encounter_id_scr']].drop_duplicates()
-        if not cand.empty:
-            df.loc[df['encounter_id'].isin(cand['encounter_id_scr']), 'has_matched_follow_up'] = True
-
-        # do NOT add a follow_up column to df; just persist the screening flag
-        self.__populace__ = df
+        Notes
+        -----
+        Only the boolean flag is persisted,
+        the follow up encounters themselves never enter the populace
+        """
+        is_matched = populace['encounter_id'].isin(matched_screening_ids)
+        populace.loc[is_matched,'has_matched_follow_up'] = True
+        return populace
 
     def __create_numerator_desc(self) -> None:
         """
