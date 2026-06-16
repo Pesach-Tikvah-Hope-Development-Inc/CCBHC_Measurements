@@ -197,11 +197,25 @@ class _Sub_1(Submeasure):
         """
         Assigns numerator and numerator_desc for multiple False-reason cases
         """
+        self.__ensure_screening_types()
         self.__assign_screening_encounter_id()
         self.__determine_screenings_results()
         self.__match_follow_ups_to_screenings()
         self.__create_numerator_desc()
         self.__get_numerator_encounter()
+
+    def __ensure_screening_types(self) -> None:
+        """
+        Voids any screening that was not administered with an approved depression tool
+ 
+        Notes
+        -----
+        Only PHQ-9, PHQA, and PSC-17 are valid depression screening tools for this measure.
+        """
+        # keep the rows with valid screening types, void everything else
+        valid_screening_types = ('PHQ9', 'PHQA', 'PSC-17')
+        is_valid_screening = self.__populace__['screening_type'].isin(valid_screening_types)
+        self.__populace__.loc[~is_valid_screening, ['screening_type', 'total_score']] = None
 
     def __assign_screening_encounter_id(self) -> None:
         """
