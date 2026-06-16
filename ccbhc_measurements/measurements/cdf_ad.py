@@ -212,6 +212,8 @@ class _Sub_1(Submeasure):
         -----
         Only PHQ-9, PHQA, and PSC-17 are valid depression screening tools for this measure.
         """
+        # make all screenings uppercase to avoid input differences
+        self.__populace__['screening_type'] = self.__populace__['screening_type'].str.upper()
         # keep the rows with valid screening types, void everything else
         valid_screening_types = ('PHQ9', 'PHQA', 'PSC-17')
         is_valid_screening = self.__populace__['screening_type'].isin(valid_screening_types)
