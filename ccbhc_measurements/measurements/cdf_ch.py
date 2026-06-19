@@ -706,7 +706,6 @@ class _Sub_1(Submeasure):
                 "screening_encounter_id",
                 "numerator",
                 "numerator_desc",
-                "follow_up",
                 "medicaid",
             ]
         ].drop_duplicates(subset="patient_measurement_year_id")
