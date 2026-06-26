@@ -170,7 +170,8 @@ class _Sub_1(Submeasure):
         # OR Clients with dementia at any time during the patient’s history through the end of the Measurement Year
         # OR Clients who use hospice services any time during the Measurement Year
         self.__remove_age_exclusions()
-        self.__remove_dementia_exclusions()
+        self.__remove_diagnosis_exclusions('F01|F02|F03', include_measurement_year=True)  # dementia
+        self.__remove_diagnosis_exclusions('F10', include_measurement_year=False)  # alcohol use disorder
         # NOTE This is something we don't track, therefore it is commented out as I don't know how EHRs store this data and what it looks like
         # If someone can make a pull request and write this code, Thanks :)
         # self.__remove_hospice_exclusions() 
@@ -188,51 +189,66 @@ class _Sub_1(Submeasure):
         """
         self.__populace__['age'] = (self.__populace__['encounter_datetime'] - self.__populace__['patient_DOB']).apply(lambda val: val.days//365.25)
 
-    def __remove_dementia_exclusions(self) -> None:
+    def __remove_diagnosis_exclusions(self, icd_pattern:str, include_measurement_year:bool) -> None:
         """
-        Finds all clients who have had dementia prior to the end of their measurement year and removes them
+        Finds all clients diagnosed with the given condition within the exclusion window and removes them
+ 
+        Parameters
+        ----------
+        icd_pattern
+            A regex of ICD-10 code prefixes identifying the diagnosis (e.g. 'F01|F02|F03' for dementia)
+        include_measurement_year
+            True when a diagnosis dated within the measurement year still excludes (through the end of the year),
+            False when the diagnosis must predate the measurement year
         """
-        # Clients with dementia at any time during the patient’s history until the end of the Measurement Year
-        dementia = self.__get_dementia_exclusions()
-        dementia['patient_measurement_year_id'] = self.__create_patient_measurement_year_id(dementia['patient_id'], dementia['encounter_datetime'])
-        dementia['exclusion_year'] = self.__get_year(dementia['encounter_datetime'])
-        exclusion_ids = self.__compare_dementia_year_to_populace(dementia)
-        self.__filter_dementia_exclusions(exclusion_ids)
+        diagnoses = self.__get_diagnosis_exclusions(icd_pattern)
+        diagnoses['patient_measurement_year_id'] = self.__create_patient_measurement_year_id(diagnoses['patient_id'], diagnoses['encounter_datetime'])
+        diagnoses['exclusion_year'] = self.__get_year(diagnoses['encounter_datetime'])
+        exclusion_ids = self.__compare_exclusion_year_to_populace(diagnoses, include_measurement_year)
+        self.__filter_exclusions(exclusion_ids)
 
-    def __get_dementia_exclusions(self) -> pd.DataFrame:
+    def __get_diagnosis_exclusions(self, icd_pattern:str) -> pd.DataFrame:
         """
-        Gets all patients with a dementia ICD diagnosis
+        Gets all patients with a given ICD diagnosis
 
         Returns
         -------
         pd.Dataframe
-            Dementia diagnoses
+            icd diagnoses
         """
-        # ICD codes for dementia can be found at https://www.icd10data.com/ICD10CM/Codes/F01-F99/F01-F09
-        demantia_mask = self.__DIAGNOSIS__['diagnosis'].str.contains('F01|F02|F03')
-        return self.__DIAGNOSIS__[demantia_mask].drop_duplicates() # use a generic drop_duplicates just to shave excess data
+        # ICD codes can be found at https://www.icd10data.com/ICD10CM/Codes/F01-F99
+        diagnosis_mask = self.__DIAGNOSIS__['diagnosis'].str.contains(icd_pattern,na=False)
+        return self.__DIAGNOSIS__[diagnosis_mask].drop_duplicates() # use a generic drop_duplicates just to shave excess data
 
-    def __compare_dementia_year_to_populace(self, dementia:pd.DataFrame) -> list:
+    def __compare_exclusion_year_to_populace(self, exclusions:pd.DataFrame, include_measurement_year:bool) -> list:
         """
-        Finds clients who've had dementia prior to the end of their measurement year
+        Finds clients whose diagnosis falls within the exclusion window for their measurement year
         
         Parameters
         ----------
-        dementia
-            All dementia diagnoses
+        exclusions
+            Diagnoses tagged with an exclusion_year (the year the diagnosis was recorded)
+        include_measurement_year
+            True to exclude when the diagnosis year is on or before the measurement year (through the end of it),
+            False to exclude only when the diagnosis year is strictly before the measurement year
 
         Returns
         -------
         list
-            Patient IDs of patients with dementia 
+            patient_measurement_year_ids to be excluded
         """
         unique_denominators = self.__populace__[['patient_id','measurement_year','patient_measurement_year_id']].drop_duplicates('patient_measurement_year_id')
-        unique_denominators = unique_denominators.merge(dementia[['patient_id','exclusion_year']],how='left',left_on='patient_id',right_on='patient_id')
-        unique_denominators['to_exclude'] = unique_denominators['measurement_year'] >= unique_denominators['exclusion_year']
+        unique_denominators = unique_denominators.merge(exclusions[['patient_id','exclusion_year']],how='left',left_on='patient_id',right_on='patient_id')
+        # a diagnosis in the measurement year itself only counts when the window reaches through that year (dementia);
+        # otherwise the diagnosis must predate the measurement year (alcohol)
+        if include_measurement_year:
+            unique_denominators['to_exclude'] = unique_denominators['measurement_year'] >= unique_denominators['exclusion_year']
+        else:
+            unique_denominators['to_exclude'] = unique_denominators['measurement_year'] > unique_denominators['exclusion_year']
         exclusion_ids = unique_denominators[unique_denominators['to_exclude']]['patient_measurement_year_id'].drop_duplicates().to_list()
         return exclusion_ids
 
-    def __filter_dementia_exclusions(self, exclusion_ids:list) -> None:
+    def __filter_exclusions(self, exclusion_ids:list) -> None:
         """
         Removes clients who've had dementia
         
@@ -267,7 +283,11 @@ class _Sub_1(Submeasure):
         has_no_screening = self.__populace__[~screening_mask].copy()
         has_no_screening[['numerator','encounter_id']] = False, None
         has_screening = self.__populace__[screening_mask].copy()
-        has_screening[['numerator','encounter_id']] = has_screening.apply(lambda row: self.__get_screening_details(row,screening_groups.get_group(row['patient_id'])),axis=1)
+        # if no patients have a screening, the has_screening.apply() would crash
+        if has_screening.empty:
+            has_screening[['numerator','encounter_id']] = False, None
+        else:
+            has_screening[['numerator','encounter_id']] = has_screening.apply(lambda row: self.__get_screening_details(row,screening_groups.get_group(row['patient_id'])),axis=1)
         self.__populace__ = pd.concat([has_screening,has_no_screening])
 
     def __get_systematic_screenings(self) -> pd.DataFrame:
@@ -652,8 +672,7 @@ class _Sub_2(Submeasure):
         """
         Calculates if patients are healthy or unhealthy alcohol users
         """
-        # set default unhealthy_alcohol_use to False and OR it with the previous 
-        # screening results to keep the integrity of previous screening logics
+        # set default unhealthy_alcohol_use to False and OR it with the screening results
         self.__populace__['unhealthy_alcohol_use'] = False
         for screener in alcohol_screeners:
             df = self.__populace__[self.__populace__['screening'] == screener].copy()
